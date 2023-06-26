@@ -1,6 +1,6 @@
-# Plain Text Journal
+# Task Journal 
 
-Plain text journaling for tracking habits and tasks through bash and the editor of your choice.
+A plain text journal for tracking habits and tasks through bash and the editor of your choice.
 
 ## Why plain text?
 
