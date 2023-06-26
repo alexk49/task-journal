@@ -60,7 +60,7 @@ fi
 # format will be yyyy-mm-dd-jrnl.txt
 filename="$todays_date-jrnl.txt"
 
-filepath=$month_folder/$filename
+filepath="$month_folder/$filename"
 
 # check if the today's date txt file exists
 # if not exists make it
@@ -69,18 +69,18 @@ filepath=$month_folder/$filename
 # copy habits file to todays file
 if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
     echo "Creating todays date file with habits"
-    cat $HABITS_FILE > $filepath
+    cat "$HABITS_FILE" > "$filepath"
     add_defaults
-    $EDITOR $filepath
+    "$EDITOR" "$filepath"
 
 # if today file does not exist and habits does not exist
 # just create today file
 elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
     touch "$filepath"
     add_defaults
-    $EDITOR $filepath
+    "$EDITOR" "$filepath"
 
 else
     # open file in edtior
-    $EDITOR $filepath
+    "$EDITOR" "$filepath"
 fi
