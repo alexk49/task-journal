@@ -24,7 +24,10 @@ add_defaults () {
     sed -i "1s/^/Task Journal $todays_date\n-----------------------\n\n/" $filepath
     cat <<- _EOF_ >> $filepath
 
-Tasks
+tasks
+-----
+
+notes
 -----
 _EOF_
     return
