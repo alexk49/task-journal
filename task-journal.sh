@@ -33,8 +33,14 @@ notes
 _EOF_
     if [ -e "$yesterdaypath" ]; then
         if [ -e "$HABITS_FILE" ]; then
-            remainingtasks=$(grep -v -f "$HABITS_FILE" "$yesterdaypath" | grep -v -e "--*" -e "tasks" -e "^x\s" -e "notes" -e "^$") 
-            echo "adding outsanding tasks from yesterday"
+            # get line number of notes
+            # to then cut off anything after the notes heading
+            notes_line_number=$(sed -n '/^notes$/=' "$yesterdaypath")
+            # inverse grep contents of habits file
+            # inverse grep done tasks, headings, and blank lines
+            echo "cutting off notes from previous entry"
+            remainingtasks=$(sed ${notes_line_number}q "$yesterdaypath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^tasks$" -e "^x\s" -e "^notes$" -e "^$") 
+            echo "adding outsanding tasks from previous entry"
             # this uses a here switch
             # to pass the remaining tasks variable to standard input
             # this is sub in after the match
