@@ -16,20 +16,38 @@ HABITS_FILE="$DATA_FOLDER/habits.txt"
 
 # get todays date as file name
 todays_date=$(date +"%Y-%m-%d")
+yesterday=$(date -d '-1 day' '+%Y-%m-%d')
+tomorrow=$(date -d "+1 day" "+%Y-%m-%d")
 
 add_defaults () {
     echo "Writing defaults to new file"
     # add heading
     # by 1st line address
-    sed -i "1s/^/Task Journal $todays_date\n-----------------------\n\n/" $filepath
-    cat <<- _EOF_ >> $filepath
+    sed -i "1s/^/task journal $todays_date\n-----------------------\n\n/" "$filepath"
+    cat <<- _EOF_ >> "$filepath"
 
 tasks
------
 
 notes
------
+*
 _EOF_
+    if [ -e "$yesterdaypath" ]; then
+        if [ -e "$HABITS_FILE" ]; then
+            remainingtasks=$(grep -v -f "$HABITS_FILE" "$yesterdaypath" | grep -v -e "--*" -e "tasks" -e "^x\s" -e "notes" -e "^$") 
+            echo "adding outsanding tasks from yesterday"
+            # this uses a here switch
+            # to pass the remaining tasks variable to standard input
+            # this is sub in after the match
+            sed -i -e "/^tasks$/r/dev/stdin" "$filepath" <<<$remainingtasks
+        fi
+    fi
+    return
+}
+
+
+get_done_tasks () {
+    echo "Getting all completed tasks"
+    grep -e "^x\s" "$filepath"
     return
 }
 
@@ -65,6 +83,8 @@ filename="$todays_date-jrnl.txt"
 
 filepath="$month_folder/$filename"
 
+yesterdayfile="$yesterday-jrnl.txt"
+yesterdaypath="$month_folder/$yesterdayfile"
 # check if the today's date txt file exists
 # if not exists make it
 
