@@ -88,7 +88,7 @@ check_paths () {
         entry_date=$1
     fi
     year=${entry_date:0:4}
-    month="$entry_date" | date +"%b"
+    month=`date --date="$entry_date" '+%b'`
     # check if a folder named journal exists
     # if not make it
     if [ ! -d "$JOURNALS_FOLDER" ]; then
