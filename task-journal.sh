@@ -19,11 +19,15 @@ todays_date=$(date +"%Y-%m-%d")
 yesterday=$(date -d '-1 day' '+%Y-%m-%d')
 tomorrow=$(date -d "+1 day" "+%Y-%m-%d")
 
+# add default headings and undone tasks from previous day
 add_defaults () {
     echo "Writing defaults to new file"
     # add heading
     # by 1st line address
     sed -i "1s/^/task journal $todays_date\n-----------------------\n\n/" "$filepath"
+    # indention deliberate got rid of
+    # as tab characters break <<- switch
+    # write defaults to file
     cat <<- _EOF_ >> "$filepath"
 
 tasks
@@ -47,6 +51,24 @@ _EOF_
             sed -i -e "/^tasks$/r/dev/stdin" "$filepath" <<<$remainingtasks
         fi
     fi
+    return
+}
+
+
+edit_file () {
+    "$EDITOR" "$filepath"
+    return
+}
+
+
+view_file () {
+    cat "$filepath"
+    return
+}
+
+
+view_key_file () {
+    cat "$KEY_FILE"
     return
 }
 
@@ -100,16 +122,33 @@ if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
     echo "Creating todays date file with habits"
     cat "$HABITS_FILE" > "$filepath"
     add_defaults
-    "$EDITOR" "$filepath"
 
 # if today file does not exist and habits does not exist
 # just create today file
 elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
     touch "$filepath"
     add_defaults
-    "$EDITOR" "$filepath"
-
 else
-    # open file in edtior
-    "$EDITOR" "$filepath"
+    :
 fi
+
+# pass args to check if viewing or editing
+if [ $# == 0 ]; then
+    view_file 
+fi
+
+while getopts 'ek' OPTION; do
+  case "$OPTION" in 
+    e) 
+        edit_file ;;
+    k)
+        echo "Key file: "
+        view_key_file ;;
+    ?) 
+        echo "Usage: $(basename "$0") to view file"
+        echo "Usage: $(basename "$0") [-e] to edit file"
+        echo "Usage: $(basename "$0") [-k] to view key view"
+        exit 1
+        ;;
+  esac
+done
