@@ -35,21 +35,20 @@ tasks
 notes
 *
 _EOF_
-    if [ -e "$yesterdaypath" ]; then
-        if [ -e "$HABITS_FILE" ]; then
-            # get line number of notes
-            # to then cut off anything after the notes heading
-            notes_line_number=$(sed -n '/^notes$/=' "$yesterdaypath")
-            # inverse grep contents of habits file
-            # inverse grep done tasks, headings, and blank lines
-            echo "cutting off notes from previous entry"
-            remainingtasks=$(sed ${notes_line_number}q "$yesterdaypath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^tasks$" -e "^x\s" -e "^notes$" -e "^$") 
-            echo "adding outsanding tasks from previous entry"
-            # this uses a here switch
-            # to pass the remaining tasks variable to standard input
-            # this is sub in after the match
-            sed -i -e "/^tasks$/r/dev/stdin" "$filepath" <<<$remainingtasks
-        fi
+
+    if [ -e "$yesterdaypath" ] && [ -e "$HABITS_FILE" ]; then
+        # get line number of notes
+        # to then cut off anything after the notes heading
+        notes_line_number=$(sed -n '/^notes$/=' "$yesterdaypath")
+        # inverse grep contents of habits file
+        # inverse grep done tasks, headings, and blank lines
+        echo "cutting off notes from previous entry"
+        remainingtasks=$(sed ${notes_line_number}q "$yesterdaypath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^tasks$" -e "^x\s" -e "^notes$" -e "^$") 
+        echo "adding outsanding tasks from previous entry"
+        # this uses a here switch
+        # to pass the remaining tasks variable to standard input
+        # this is then added in after the match
+        sed -i -e "/^tasks$/r/dev/stdin" "$filepath" <<<$remainingtasks
     fi
     return
 }
@@ -62,7 +61,8 @@ edit_file () {
 
 
 view_file () {
-    cat "$filepath"
+    echo 
+    cat -n "$filepath"
     return
 }
 
@@ -79,67 +79,79 @@ get_done_tasks () {
     return
 }
 
-# check if a folder named journal exists
-# if not make it
-if [ ! -d "$JOURNALS_FOLDER" ]; then
-    echo "Deafult journal folder not found."
-    echo "Creating $JOURNALS_FOLDER"
-    mkdir "$JOURNALS_FOLDER"
-fi
 
-year=$(date +"%Y")
-year_folder="$JOURNALS_FOLDER/$year"
+# function to check all paths of given date work
+check_paths () {
+    if [ $# != 1 ]; then
+        entry_date=$todays_date
+    else
+        entry_date=$1
+    fi
+    year=${entry_date:0:4}
+    month="$entry_date" | date +"%b"
+    # check if a folder named journal exists
+    # if not make it
+    if [ ! -d "$JOURNALS_FOLDER" ]; then
+        echo "Deafult journal folder not found."
+        echo "Creating $JOURNALS_FOLDER"
+        mkdir "$JOURNALS_FOLDER"
+    fi
 
-if [ ! -d "$year_folder" ]; then
-    echo "Creating year folder for: $year"
-    mkdir "$year_folder"
-fi
+    year_folder="$JOURNALS_FOLDER/$year"
 
-# month as short string
-month=$(date +"%b")
-month_folder="$year_folder/$month"
+    if [ ! -d "$year_folder" ]; then
+        echo "Creating year folder for: $year"
+        mkdir "$year_folder"
+    fi
 
-# folder structure by year then month
-# $Home/notes/journals/2023/jun/
-if [ ! -d "$month_folder" ]; then
-    echo "Creating month folder for: $month"
-    mkdir "$month_folder"
-fi
+    # month as short string
+    month_folder="$year_folder/$month"
 
-# format will be yyyy-mm-dd-jrnl.txt
-filename="$todays_date-jrnl.txt"
+    # folder structure by year then month
+    # $Home/notes/journals/2023/jun/
+    if [ ! -d "$month_folder" ]; then
+        echo "Creating month folder for: $month"
+        mkdir "$month_folder"
+    fi
 
-filepath="$month_folder/$filename"
+    # format will be yyyy-mm-dd-jrnl.txt
+    filename="$entry_date-jrnl.txt"
+
+    filepath="$month_folder/$filename"
+
+    # if today file doesn't exist and habits file does
+    # copy habits file to todays file
+    if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
+        echo "Creating new file with habits"
+        cat "$HABITS_FILE" > "$filepath"
+        add_defaults
+
+    # if today file does not exist and habits does not exist
+    # just create today file
+    elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
+        touch "$filepath"
+        add_defaults
+    else
+        :
+    fi
+}
 
 yesterdayfile="$yesterday-jrnl.txt"
 yesterdaypath="$month_folder/$yesterdayfile"
 # check if the today's date txt file exists
 # if not exists make it
 
-# if today file doesn't exist and habits file does
-# copy habits file to todays file
-if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
-    echo "Creating todays date file with habits"
-    cat "$HABITS_FILE" > "$filepath"
-    add_defaults
-
-# if today file does not exist and habits does not exist
-# just create today file
-elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
-    touch "$filepath"
-    add_defaults
-else
-    :
-fi
-
-# pass args to check if viewing or editing
+# default is just view today
 if [ $# == 0 ]; then
-    view_file 
+    entry_date=$todays_date
+    check_paths $entry_date
+    view_file
 fi
 
 while getopts 'ek' OPTION; do
   case "$OPTION" in 
     e) 
+        check_paths
         edit_file ;;
     k)
         echo "Key file: "
