@@ -27,7 +27,7 @@ usage () {
 help () {
     usage
     echo
-    echo "If date not passed then date defaults to today."
+    echo "If date not passed then date default is today"
     echo "Usage: $(basename "$0") to view file"
     echo "Usage: $(basename "$0") [-e] to edit file"
     echo "Usage: $(basename "$0") [-k] to view key view"
@@ -36,6 +36,12 @@ help () {
 
 # add default headings and undone tasks from previous day
 add_defaults () {
+    if [ "$#" != 1 ]; then
+        entry_date=$today
+    else
+        entry_date=$1
+    fi
+
     echo "Writing defaults to new file"
     # add heading
     # by 1st line address
@@ -51,21 +57,25 @@ notes
 *
 _EOF_
 
-    if [ -e "$yesterdaypath" ] && [ -e "$HABITS_FILE" ]; then
+    get_previous_entry "$entry_date"
+    echo "Previous entry found: $(basename $previous_filepath)"
+    
+    if [ -e "$previous_filepath" ] && [ -e "$HABITS_FILE" ]; then
         # get line number of notes
         # to then cut off anything after the notes heading
-        notes_line_number=$(sed -n '/^notes$/=' "$yesterdaypath")
+        notes_line_number=$(sed -n '/^notes$/=' "$previous_filepath")
         # inverse grep contents of habits file
         # inverse grep done tasks, headings, and blank lines
         echo "cutting off notes from previous entry"
-        remainingtasks=$(sed "${notes_line_number}"q "$yesterdaypath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^tasks$" -e "^x\s" -e "^notes$" -e "^$") 
+        remainingtasks=$(sed "${notes_line_number}"q "$previous_filepath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^tasks$" -e "^x\s" -e "^notes$" -e "^$") 
         echo "adding outsanding tasks from previous entry"
         # this uses a here switch
         # to pass the remaining tasks variable to standard input
         # this is then added in after the match
         sed -i -e "/^tasks$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
+    else
+        :
     fi
-    return
 }
 
 
@@ -88,6 +98,37 @@ view_key_file () {
 }
 
 
+# takes entry date as arg
+# and gives back last entry
+get_previous_entry () {
+    current_entry=$1
+    count=1
+    while [[ "$count" -le 7 ]]; do
+        previous=$(date --date="${current_entry} -${count} day" "+%Y-%m-%d")
+
+        previous_year=${previous:0:4}
+        previous_month=$(date --date="$previous" '+%b')
+
+        previous_year_folder="$JOURNALS_FOLDER/$previous_year"
+        previous_month_folder="$previous_year_folder/$previous_month"
+        # format will be yyyy-mm-dd-jrnl.txt
+        previous_filename="$previous-jrnl.txt"
+
+        previous_filepath="$previous_month_folder/$previous_filename"
+        
+        if [ -f "$previous_filepath" ]; then
+            return 
+        else
+            count=$((count + 1)) 
+        fi
+    done
+
+    # if no file found return nothing
+    echo "No previous entry found within last week"
+    return
+}
+
+
 get_done_tasks () {
     echo "Getting all completed tasks"
     grep -e "^x\s" "$filepath"
@@ -97,7 +138,7 @@ get_done_tasks () {
 
 # function to check all paths of given date work
 check_paths () {
-    if [ $# != 1 ]; then
+    if [ "$#" != 1 ]; then
         entry_date=$today
     else
         entry_date=$1
@@ -139,22 +180,19 @@ check_paths () {
     if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
         echo "Creating new file with habits"
         cat "$HABITS_FILE" > "$filepath"
-        add_defaults
+        add_defaults "$entry_date"
 
-    # if today file does not exist and habits does not exist
-    # just create today file
+    # if file does not exist and habits does not exist
+    # just create file
     elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
         touch "$filepath"
-        add_defaults
+        add_defaults "$entry_date"
     else
         :
     fi
-}
 
-yesterdayfile="$yesterday-jrnl.txt"
-yesterdaypath="$month_folder/$yesterdayfile"
-# check if the today's date txt file exists
-# if not exists make it
+    return
+}
 
 
 # handle args
@@ -173,6 +211,9 @@ while [[ -n "$1" ]]; do
             view_key_file
             exit
             ;;
+        -y | yesterday)
+            entry_date=$yesterday
+            ;;
         ?) 
             usage
             exit 1
@@ -181,11 +222,17 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+# if invalid date or no entry date set
+# then entry date is today
+if [[ ! "$entry_date" =~ ^[0-9]{4}[-/][0-9]{2}[-/][0-9]{2}$ ]]; then 
+    entry_date=$today
+fi
+
 # check if edit or view
 if [[ -n "$edit" ]]; then
-    check_paths
+    check_paths "$entry_date"
     edit_file
 else
-    check_paths
+    check_paths "$entry_date"
     view_file
 fi
