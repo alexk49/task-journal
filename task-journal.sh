@@ -18,6 +18,22 @@ HABITS_FILE="$DATA_FOLDER/habits.txt"
 today=$(date +"%Y-%m-%d")
 yesterday=$(date -d '-1 day' '+%Y-%m-%d')
 
+
+usage () {
+    echo "Usage: $(basename "$0") [options] [date]"
+}
+
+
+help () {
+    usage
+    echo
+    echo "If date not passed then date defaults to today."
+    echo "Usage: $(basename "$0") to view file"
+    echo "Usage: $(basename "$0") [-e] to edit file"
+    echo "Usage: $(basename "$0") [-k] to view key view"
+}
+
+
 # add default headings and undone tasks from previous day
 add_defaults () {
     echo "Writing defaults to new file"
@@ -140,26 +156,36 @@ yesterdaypath="$month_folder/$yesterdayfile"
 # check if the today's date txt file exists
 # if not exists make it
 
-# default is just view today
-if [ $# == 0 ]; then
-    entry_date=$today
-    check_paths "$entry_date"
+
+# handle args
+# loop continues whilst $1 is not empty
+while [[ -n "$1" ]]; do
+    case "$1" in
+        -e | --edit) 
+            edit=1
+            ;;
+        -h | --help)
+            help
+            exit
+            ;;
+        -k | --key)
+            echo "Key file: "
+            view_key_file
+            exit
+            ;;
+        ?) 
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+# check if edit or view
+if [[ -n "$edit" ]]; then
+    check_paths
+    edit_file
+else
+    check_paths
     view_file
 fi
-
-while getopts 'ek' OPTION; do
-  case "$OPTION" in 
-    e) 
-        check_paths
-        edit_file ;;
-    k)
-        echo "Key file: "
-        view_key_file ;;
-    ?) 
-        echo "Usage: $(basename "$0") to view file"
-        echo "Usage: $(basename "$0") [-e] to edit file"
-        echo "Usage: $(basename "$0") [-k] to view key view"
-        exit 1
-        ;;
-  esac
-done
