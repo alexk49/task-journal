@@ -33,6 +33,7 @@ help () {
     echo "Usage: $(basename "$0") to view file"
     echo "Usage: $(basename "$0") [-e] to edit file"
     echo "Usage: $(basename "$0") [-k] to view key view"
+    echo "Usage: $(basename "$0") [-a] to add to file"
 }
 
 
@@ -107,8 +108,42 @@ add_to_file () {
     echo "adding $addition under $heading"
     sed -i -e "/^$heading$/a $addition" $filepath 
     view_file $entry_date
+    return
 
 }
+
+
+complete_task () {
+    # check args have been passed
+    if [[ "$#" != 1 ]]; then
+        echo "Invalid usage. Must provide line number of task to complete"
+        usage
+        exit 1
+    fi
+    # check arg is number
+    if [[ ! "$1" =~ ^[0-9]+$ ]]; then
+        echo "Task to complete must be passed as a number" >&2
+        usage
+        exit 1
+    fi
+
+    item="$1"
+    
+    # assign standard entry dates
+    entry_date="$today"
+    check_paths "$today"
+
+    echo "Completing item number: $item"
+    echo "Task: "
+    sed -n "${item}p;" "$filepath"
+    echo "marked as complete"
+    # taken from todo.txt
+    # no idea why | works instead of /
+    sed -i "${item}s|^|x |" "$filepath" 
+    return
+    
+}
+
 
 edit_file () {
     "$EDITOR" "$filepath"
@@ -232,6 +267,10 @@ while [[ -n "$1" ]]; do
     case "$1" in
         -a | add | --add)
             add_to_file "$2" "$3"
+            exit
+            ;;
+        -d | do | --do)
+            complete_task "$2"
             exit
             ;;
         -e | --edit) 
