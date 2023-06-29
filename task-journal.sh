@@ -18,8 +18,6 @@ HABITS_FILE="$DATA_FOLDER/habits.txt"
 today=$(date +"%Y-%m-%d")
 yesterday=$(date -d '-1 day' '+%Y-%m-%d')
 
-HEADINGS=("notes" "tasks")
-
 
 usage () {
     echo "Usage: $(basename "$0") [options] [date]"
@@ -105,7 +103,7 @@ add_to_file () {
         heading="tasks"
     fi
 
-    echo "adding $addition under $heading"
+    echo "adding $addition under the heading: $heading"
     sed -i -e "/^$heading$/a $addition" $filepath 
     view_file $entry_date
     return
