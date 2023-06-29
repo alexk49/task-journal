@@ -18,6 +18,8 @@ HABITS_FILE="$DATA_FOLDER/habits.txt"
 today=$(date +"%Y-%m-%d")
 yesterday=$(date -d '-1 day' '+%Y-%m-%d')
 
+HEADINGS=("notes" "tasks")
+
 
 usage () {
     echo "Usage: $(basename "$0") [options] [date]"
@@ -54,7 +56,6 @@ add_defaults () {
 tasks
 
 notes
-*
 _EOF_
 
     get_previous_entry "$entry_date"
@@ -78,6 +79,36 @@ _EOF_
     fi
 }
 
+
+add_to_file () {
+    entry_date="$today"
+    check_paths "$today"
+    
+    addition="$1"
+
+    if [[ "$#" == 2 ]]; then
+        heading="$2"
+        # heading has to be notes or tasks
+        # handling for n or t
+        if [[ "$heading" == "n" ]]; then
+            heading="notes"
+        elif [[ "$heading" != "notes" ]]; then
+            heading="tasks"
+        else
+            # assigned heading is fine
+            # so do nothing
+            :
+        fi
+    else
+        # default heading is tasks
+        heading="tasks"
+    fi
+
+    echo "adding $addition under $heading"
+    sed -i -e "/^$heading$/a $addition" $filepath 
+    view_file $entry_date
+
+}
 
 edit_file () {
     "$EDITOR" "$filepath"
@@ -199,6 +230,10 @@ check_paths () {
 # loop continues whilst $1 is not empty
 while [[ -n "$1" ]]; do
     case "$1" in
+        -a | add | --add)
+            add_to_file "$2" "$3"
+            exit
+            ;;
         -e | --edit) 
             edit=1
             ;;
