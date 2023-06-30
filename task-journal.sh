@@ -156,6 +156,16 @@ view_file () {
 }
 
 
+edit_habits () {
+    if [[ -e "$HABITS_FILE" ]]; then
+        "$EDITOR" "$HABITS_FILE"
+    else
+        touch "$HABITS_FILE"
+        "$EDITOR" "$HABITS_FILE"
+    fi
+}
+
+
 view_key_file () {
     cat "$KEY_FILE"
     return
@@ -247,6 +257,7 @@ check_paths () {
         add_defaults "$entry_date"
 
     # if file does not exist and habits does not exist
+
     # just create file
     elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
         touch "$filepath"
@@ -273,6 +284,9 @@ while [[ -n "$1" ]]; do
             ;;
         -e | --edit) 
             edit=1
+            ;;
+        -habits | habits)
+            edit_habits
             ;;
         -h | --help)
             help
