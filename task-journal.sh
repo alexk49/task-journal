@@ -8,11 +8,11 @@
 # vim is go to default
 EDITOR=vim; export EDITOR
 
-JOURNALS_FOLDER="$HOME/journal"
+JOURNALS_FOLDER="$HOME/task-journal"
 DATA_FOLDER="$JOURNALS_FOLDER/data"
 
-KEY_FILE="$DATA_FOLDER/key.txt"
-HABITS_FILE="$DATA_FOLDER/habits.txt"
+KEY_FILE="$DATA_FOLDER/key.md"
+HABITS_FILE="$DATA_FOLDER/habits.md"
 
 # get todays date as file name
 today=$(date +"%Y-%m-%d")
@@ -46,15 +46,15 @@ add_defaults () {
     echo "Writing defaults to new file"
     # add heading
     # by 1st line address
-    sed -i "1s/^/task journal $today\n-----------------------\n\n/" "$filepath"
+    sed -i "1s/^/# task journal $entry_date\n\n/" "$filepath"
     # indention deliberate got rid of
     # as tab characters break <<- switch
     # write defaults to file
     cat <<- _EOF_ >> "$filepath"
 
-tasks
+## tasks
 
-notes
+## notes
 _EOF_
 
     get_previous_entry "$entry_date"
@@ -63,16 +63,16 @@ _EOF_
     if [ -e "$previous_filepath" ] && [ -e "$HABITS_FILE" ]; then
         # get line number of notes
         # to then cut off anything after the notes heading
-        notes_line_number=$(sed -n '/^notes$/=' "$previous_filepath")
+        notes_line_number=$(sed -n '/^## notes$/=' "$previous_filepath")
         # inverse grep contents of habits file
         # inverse grep done tasks, headings, and blank lines
         echo "cutting off notes from previous entry"
-        remainingtasks=$(sed "${notes_line_number}"q "$previous_filepath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^tasks$" -e "^x\s" -e "^notes$" -e "^$") 
+        remainingtasks=$(sed "${notes_line_number}"q "$previous_filepath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^## tasks$" -e "^x\s" -e "^## notes$" -e "^$") 
         echo "adding outsanding tasks from previous entry"
         # this uses a here switch
         # to pass the remaining tasks variable to standard input
         # this is then added in after the match
-        sed -i -e "/^tasks$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
+        sed -i -e "/^## tasks$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
     else
         :
     fi
@@ -185,8 +185,8 @@ get_previous_entry () {
 
         previous_year_folder="$JOURNALS_FOLDER/$previous_year"
         previous_month_folder="$previous_year_folder/$previous_month"
-        # format will be yyyy-mm-dd-jrnl.txt
-        previous_filename="$previous-jrnl.txt"
+        # format will be yyyy-mm-dd-jrnl.md
+        previous_filename="$previous-jrnl.md"
 
         previous_filepath="$previous_month_folder/$previous_filename"
         
@@ -212,6 +212,15 @@ get_done_tasks () {
 
 # function to check all paths of given date work
 check_paths () {
+    # if habits file doesn't exist
+    # create empty habits file
+    if [[ ! -e "$HABITS_FILE" ]]; then
+        echo "Creating new habits file"
+        touch "$HABITS_FILE"
+        echo -e "## habits\n" > "$HABITS_FILE"
+    fi
+
+    # set todays today if no args passed
     if [ "$#" != 1 ]; then
         entry_date=$today
     else
@@ -244,8 +253,8 @@ check_paths () {
         mkdir "$month_folder"
     fi
 
-    # format will be yyyy-mm-dd-jrnl.txt
-    filename="$entry_date-jrnl.txt"
+    # format will be yyyy-mm-dd-jrnl.md
+    filename="$entry_date-jrnl.md"
 
     filepath="$month_folder/$filename"
 
