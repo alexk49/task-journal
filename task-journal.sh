@@ -150,8 +150,46 @@ edit_file () {
 
 
 view_file () {
-    echo 
-    cat -n "$filepath"
+    # unused colours kept in case of change
+    # thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
+    BLACK=$(tput setaf 0)
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    LIME_YELLOW=$(tput setaf 190)
+    POWDER_BLUE=$(tput setaf 153)
+    BLUE=$(tput setaf 4)
+    MAGENTA=$(tput setaf 5)
+    CYAN=$(tput setaf 6)
+    WHITE=$(tput setaf 7)
+    BOLD=$(tput bold)
+    NORMAL=$(tput sgr0)
+    UNDERLINE=$(tput smul)
+
+    # loop throuh file to allow colour highlighting 
+    # set internal field seperator to blank
+    # this avoids stripping of whitespace at beginning or end of lines
+    # colorized text taken from https://stackoverflow.com/questions/5412761/using-colors-with-printf/5413029#5413029
+    
+    # spaces in printf to match cat output
+    # line numbers added manually
+
+    linecount=0
+
+    while IFS="" read -r line || [[ -n "$line" ]]; do
+        if [[ "$line" =~ ^# ]]; then
+            # put headings in bold and colour red
+            # must reset to normal at end
+            printf "    %s%s%s %s%s\n" "$((++linecount))" "$BOLD" "$RED" "$line" "$NORMAL"
+        elif [[ "$line" =~ ^x ]]; then
+            # mark done tasks in yellow
+            # must reset to normal at end
+            printf "    %s%s %s%s\n" "$((++linecount))" "$YELLOW" "$line" "$NORMAL"
+        else
+            # print line as normal
+            printf '    %s %s\n' "$((++linecount))" "$line"
+        fi
+    done < "$filepath"
     return
 }
 
