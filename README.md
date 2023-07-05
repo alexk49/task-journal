@@ -2,21 +2,19 @@
 
 A plain text bullet journal for tracking habits and tasks through bash and the editor of your choice.
 
-## Intended usage once actually implemented
+## Basic Usage 
 
-The default with no args passed will open a .txt file with today's date stamp:
+The default with no args passed will open a .md file with today's date stamp, and all the default headings added.
 
 ```
-journal.sh
+task-journal.sh
 ```
 
-If you need the day before or day after you can pass:
+If you need the day before/the previous entry, you can pass:
 
 ```
 # open a file for yesterday
 journal.sh yesterday
-# open a file for tomorrow
-journal.sh tomorrow
 ```
 
 ## Data files
@@ -28,16 +26,14 @@ If desired, you can create a key file and a habits file.
 This is a reminder for how to keep track of the status of tasks. The only markers are to display whether a task has been done or is in progress. This is kept track of with \ and x as markers for in progress and done. A task with no markers has not yet been actioned.
 
 ```
-task with no status
+task with no status is to do
 x example done task
 \ in progress task
 ```
 
 ### Habits file
 
-If you want to track habits then under the data folder create a file called habits.txt. These will be automatically added to each new journal entry so they can be tracked every day.
-
-The recommend structure should follow:
+A habits file is created by default. This is used to track every day tasks. The recommend structure should follow:
 
 ``` example habits file
 habits
@@ -53,7 +49,7 @@ The habits you list in this file will be added into every entry of your journal.
 
 ## Journal Entries
 
-If a habits file is created then each journal entry will consist of three sections: habits, tasks, and notes.
+Each journal entry will consist of three sections: habits, tasks, and notes.
 
 ### Tasks
 
@@ -90,7 +86,7 @@ journal.sh stats week
 
 ## Inspirations/alternative projects
 
-This project was mainly undertaken through wanting a project to learn bash. But, also as a way to implement a deliberately, simple and bare bones journal method for tracking habits, tasks, and quick notes about the day.
+This project was mainly undertaken through wanting a project to learn bash. But, also as a way to implement a deliberately, simple and bare bones journal method for tracking habits, tasks, and quick notes about the day. The task section takes a lot of inspiration (steals) from the todo.txt format.
 
 [How to Bullet Journal](https://www.youtube.com/watch?v=fm15cmYU0IM) video by "inventor" of the bullet journal method.
 
