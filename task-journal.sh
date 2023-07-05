@@ -212,13 +212,6 @@ get_done_tasks () {
 
 # function to check all paths of given date work
 check_paths () {
-    # if habits file doesn't exist
-    # create empty habits file
-    if [[ ! -e "$HABITS_FILE" ]]; then
-        echo "Creating new habits file"
-        touch "$HABITS_FILE"
-        echo -e "## habits\n" > "$HABITS_FILE"
-    fi
 
     # set todays today if no args passed
     if [ "$#" != 1 ]; then
@@ -251,6 +244,20 @@ check_paths () {
     if [ ! -d "$month_folder" ]; then
         echo "Creating month folder for: $month"
         mkdir "$month_folder"
+    fi
+
+    # if data folder doesn't exist then make it
+    if [[ ! -d "$DATA_FOLDER" ]]; then
+        echo "Creating data folder"
+        mkdir "$DATA_FOLDER"
+    fi
+
+    # if habits file doesn't exist
+    # create empty habits file
+    if [[ ! -e "$HABITS_FILE" ]]; then
+        echo "Creating new habits file"
+        touch "$HABITS_FILE"
+        echo -e "## habits\n" > "$HABITS_FILE"
     fi
 
     # format will be yyyy-mm-dd-jrnl.md
