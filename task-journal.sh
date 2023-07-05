@@ -296,6 +296,7 @@ while [[ -n "$1" ]]; do
             ;;
         -habits | habits)
             edit_habits
+            exit
             ;;
         -h | --help)
             help
