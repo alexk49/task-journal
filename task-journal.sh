@@ -104,7 +104,7 @@ add_to_file () {
     fi
 
     echo "adding $addition under the heading: $heading"
-    sed -i -e "/^$heading$/a $addition" $filepath 
+    sed -i -e "/^## $heading$/a $addition" $filepath 
     view_file $entry_date
     return
 
