@@ -351,7 +351,15 @@ while [[ -n "$1" ]]; do
             add_to_file "$2" "$3"
             exit
             ;;
-        -d | do | --do)
+        -d | --date | date)
+            # usage: tj --date yyyy-mm-dd
+            # view given entry
+            entry_date="$2"
+            check_paths "$entry_date"
+            view_file
+            exit
+            ;;
+        do | --do)
             complete_task "$2"
             exit
             ;;
