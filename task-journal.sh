@@ -194,6 +194,25 @@ view_file () {
 }
 
 
+search_entry () {
+    # usage: search-term entry-date
+    search_term="$1"
+    # entry date is optional
+    # if not given assign to today
+    if [[ "$#" == 2 ]]; then
+        entry_date="$2"
+    else
+        entry_date="$today"
+    fi
+
+    # check paths and assign filepath
+    check_paths "$entry_date"
+
+    grep --color='auto' "$search_term" "$filepath"
+    return
+}
+
+# bring habits file up for editing
 edit_habits () {
     if [[ -e "$HABITS_FILE" ]]; then
         "$EDITOR" "$HABITS_FILE"
@@ -203,7 +222,7 @@ edit_habits () {
     fi
 }
 
-
+# quicky view key file
 view_key_file () {
     cat "$KEY_FILE"
     return
@@ -350,6 +369,12 @@ while [[ -n "$1" ]]; do
         -k | --key)
             echo "Key file: "
             view_key_file
+            exit
+            ;;
+        -s | ls | -ls | search)
+            # expected usage is
+            # tj search-term optional-date-to-search
+            search_entry "$2" "$3"
             exit
             ;;
         -y | yesterday)
