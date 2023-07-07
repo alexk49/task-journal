@@ -233,9 +233,9 @@ search_entry () {
     check_paths "$entry_date"
     printf "$BOLD"
     head -n1 "$filepath"
+    printf "$NORMAL"
     echo
     grep --color='auto' "$search_term" "$filepath"
-    printf "$DEFAULT"
     return
 }
 
