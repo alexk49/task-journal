@@ -44,8 +44,7 @@ add_defaults () {
     fi
 
     echo "Writing defaults to new file"
-    # add heading
-    # by 1st line address
+    # add heading by 1st line address
     sed -i "1s/^/# task journal $entry_date\n\n/" "$filepath"
     # indention deliberate got rid of
     # as tab characters break <<- switch
@@ -224,8 +223,20 @@ edit_habits () {
 
 # quicky view key file
 view_key_file () {
-    cat "$KEY_FILE"
-    return
+    if [[ -e "$KEY_FILE" ]]; then
+        cat "$KEY_FILE"
+        return
+    else
+        # indentation deliberately removed
+        # to avoid breaking here switch
+        cat << _EOF_ >> "$KEY_FILE" 
+task with no status is to do
+x example done task
+\ in progress task
+_EOF_
+        cat "$KEY_FILE"
+        return
+    fi
 }
 
 
