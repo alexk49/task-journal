@@ -14,6 +14,22 @@ DATA_FOLDER="$JOURNALS_FOLDER/data"
 KEY_FILE="$DATA_FOLDER/key.md"
 HABITS_FILE="$DATA_FOLDER/habits.md"
 
+# unused colours kept in case of change
+# thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
+BLACK=$(tput setaf 0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+LIME_YELLOW=$(tput setaf 190)
+POWDER_BLUE=$(tput setaf 153)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
+BOLD=$(tput bold)
+NORMAL=$(tput sgr0)
+UNDERLINE=$(tput smul)
+
 # get todays date as file name
 today=$(date +"%Y-%m-%d")
 yesterday=$(date -d '-1 day' '+%Y-%m-%d')
@@ -173,21 +189,6 @@ edit_file () {
 
 
 view_file () {
-    # unused colours kept in case of change
-    # thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
-    BLACK=$(tput setaf 0)
-    RED=$(tput setaf 1)
-    GREEN=$(tput setaf 2)
-    YELLOW=$(tput setaf 3)
-    LIME_YELLOW=$(tput setaf 190)
-    POWDER_BLUE=$(tput setaf 153)
-    BLUE=$(tput setaf 4)
-    MAGENTA=$(tput setaf 5)
-    CYAN=$(tput setaf 6)
-    WHITE=$(tput setaf 7)
-    BOLD=$(tput bold)
-    NORMAL=$(tput sgr0)
-    UNDERLINE=$(tput smul)
 
     # loop throuh file to allow colour highlighting 
     # set internal field seperator to blank
@@ -222,16 +223,19 @@ search_entry () {
     search_term="$1"
     # entry date is optional
     # if not given assign to today
-    if [[ "$#" == 2 ]]; then
-        entry_date="$2"
+    
+    if [[ -n "$2" ]]; then
+        check_valid_date "$2" 
     else
         entry_date="$today"
     fi
-
     # check paths and assign filepath
     check_paths "$entry_date"
-
+    printf "$BOLD"
+    head -n1 "$filepath"
+    echo
     grep --color='auto' "$search_term" "$filepath"
+    printf "$DEFAULT"
     return
 }
 
