@@ -430,6 +430,8 @@ done
 
 if [[ -n "$entry_date" ]]; then
     check_valid_date "$entry_date"
+else
+    entry_date="$today"
 fi
 
 # check if edit or view
