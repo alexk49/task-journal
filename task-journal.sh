@@ -35,6 +35,30 @@ help () {
 }
 
 
+# if invalid date or no entry date set
+# then entry date is today
+check_valid_date () {
+    entry_date="$1"
+    
+    # check valid format
+    if [[ ! "$entry_date" =~ ^[0-9]{4}[-/][0-9]{2}[-/][0-9]{2}$ ]]; then 
+        echo "Invalid format date given. Format must be: yyyy-mm-dd"
+        echo "Reseting date to $today"
+        entry_date=$today
+    fi
+
+    # redirect date check stderr and stdout to dev/null
+    date -d "$entry_date" 2>&1>/dev/null
+    # if exit code is 1 invalid date otherwise fine
+    if [[ "$?" == 1 ]]; then
+        echo "Invalid date"
+        echo "Reseting date to $today"
+        entry_date="$today"
+    fi
+}
+
+
+
 # add default headings and undone tasks from previous day
 add_defaults () {
     if [ "$#" != 1 ]; then
@@ -366,9 +390,6 @@ while [[ -n "$1" ]]; do
             # usage: tj --date yyyy-mm-dd
             # view given entry
             entry_date="$2"
-            check_paths "$entry_date"
-            view_file
-            exit
             ;;
         do | --do)
             complete_task "$2"
@@ -407,10 +428,8 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-# if invalid date or no entry date set
-# then entry date is today
-if [[ ! "$entry_date" =~ ^[0-9]{4}[-/][0-9]{2}[-/][0-9]{2}$ ]]; then 
-    entry_date=$today
+if [[ -n "$entry_date" ]]; then
+    check_valid_date "$entry_date"
 fi
 
 # check if edit or view
