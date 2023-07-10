@@ -332,6 +332,12 @@ get_previous_entry () {
 
 
 get_done_tasks () {
+    if [[ "$#" != 1 ]]; then
+        entry_date="$today"
+    else
+        entry_date="$1"
+    fi
+    check_paths "$entry_date"
     echo "Getting all completed tasks"
     grep -e "^x\s" "$filepath"
     return
@@ -445,6 +451,10 @@ while [[ -n "$1" ]]; do
         -k | --key)
             echo "Key file: "
             view_key_file
+            exit
+            ;;
+        -r | --review | review)
+            get_done_tasks "$today"
             exit
             ;;
         -s | ls | -ls | search)
