@@ -10,6 +10,7 @@ EDITOR=vim; export EDITOR
 
 JOURNALS_FOLDER="$HOME/task-journal"
 DATA_FOLDER="$JOURNALS_FOLDER/data"
+REVIEW_FOLDER="$JOURNALS_FOLDER/reviews"
 
 KEY_FILE="$DATA_FOLDER/key.md"
 HABITS_FILE="$DATA_FOLDER/habits.md"
@@ -94,6 +95,7 @@ add_defaults () {
 ## tasks
 
 ## notes
+
 _EOF_
 
     get_previous_entry "$entry_date"
@@ -199,6 +201,9 @@ edit_file () {
 
 
 view_file () {
+    if [[ "$#" == 1 ]]; then
+        filepath="$1"
+    fi
 
     # loop throuh file to allow colour highlighting 
     # set internal field seperator to blank
@@ -254,7 +259,6 @@ search_entry () {
 
 search_past_week () {
     search_term="$1"
-    seven_days_ago=$(date -d '-7 day' '+%Y-%m-%d')
     # loop through past 7 days
     for (( i=0; i<7; i=i+1 )); do
         entry_date=$(date -d "-$i day" "+%Y-%m-%d")
@@ -331,6 +335,39 @@ get_previous_entry () {
 }
 
 
+review_past_week () {
+    # loop through past 7 days
+
+    seven_days_ago=$(date -d '-7 day' '+%Y-%m-%d')
+    
+    month=$(date --date="$seven_days_ago" '+%b')
+    
+    if [[ ! -d "$REVIEW_FOLDER" ]]; then
+            mkdir "$REVIEW_FOLDER"
+    fi
+    
+    review_file_name="$today-review.md"
+    review_filepath="$REVIEW_FOLDER/$review_file_name"
+    
+    echo "# Tasks completed between $seven_days_ago and $today"
+
+    for (( i=0; i<7; i=i+1 )); do
+        entry_date=$(date -d "-$i day" "+%Y-%m-%d")
+
+        get_done_tasks "$entry_date"
+        
+        if [[ -n "$completed_tasks" ]]; then
+            head -n 1 "$filepath" >> "$review_filepath"
+            printf "%s" "$completed_tasks" >> "$review_filepath"
+            printf "\n\n" >> "$review_filepath"
+        fi
+    done
+
+    echo
+    echo "Review written to: $review_filepath"
+
+}
+
 get_done_tasks () {
     if [[ "$#" != 1 ]]; then
         entry_date="$today"
@@ -338,8 +375,15 @@ get_done_tasks () {
         entry_date="$1"
     fi
     check_paths "$entry_date"
-    echo "Getting all completed tasks"
-    grep -e "^x\s" "$filepath"
+    completed_tasks=$(grep -e "^x\s" "$filepath")
+    
+    if [[ -n "$completed_tasks" ]]; then
+        echo
+        printf "$BOLD"
+        head -n 1 "$filepath"
+        printf "$NORMAL"
+        echo $completed_tasks
+    fi
     return
 }
 
@@ -454,7 +498,7 @@ while [[ -n "$1" ]]; do
             exit
             ;;
         -r | --review | review)
-            get_done_tasks "$today"
+            review_past_week
             exit
             ;;
         -s | ls | -ls | search)
