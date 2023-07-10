@@ -233,8 +233,10 @@ search_entry () {
     search_term="$1"
     # entry date is optional
     # if not given assign to today
-    
-    if [[ -n "$2" ]]; then
+    if [[ "$2" == "week" ]]; then
+        search_past_week "$search_term"
+        exit
+    elif [[ -n "$2" ]]; then
         check_valid_date "$2" 
     else
         entry_date="$today"
@@ -248,6 +250,26 @@ search_entry () {
     grep --color='auto' "$search_term" "$filepath"
     return
 }
+
+
+search_past_week () {
+    search_term="$1"
+    seven_days_ago=$(date -d '-7 day' '+%Y-%m-%d')
+    # loop through past 7 days
+    for (( i=0; i<7; i=i+1 )); do
+        entry_date=$(date -d "-$i day" "+%Y-%m-%d")
+
+        check_paths "$entry_date"
+        printf "$BOLD"
+        head -n1 "$filepath"
+        printf "$NORMAL"
+        echo
+        grep --color='auto' "$search_term" "$filepath"
+    done
+
+    return
+}
+
 
 # bring habits file up for editing
 edit_habits () {
