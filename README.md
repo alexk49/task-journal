@@ -1,6 +1,6 @@
 # Task Journal 
 
-A plain text bullet journal for tracking habits and tasks through bash and the editor of your choice.
+A plain text bullet journal for tracking habits, tasks and note taking through bash and the editor of your choice.
 
 ## Basic Usage 
 
@@ -18,8 +18,6 @@ journal.sh yesterday
 ```
 
 ## Data files
-
-If desired, you can create a key file and a habits file.
 
 ### Key file
 
@@ -54,6 +52,8 @@ Each journal entry will consist of three sections: habits, tasks, and notes.
 ### Tasks
 
 These are to do items. Anything in the tasks section not marked as finished will be carried over to the next day on creation.
+
+Using +tags at the end of the task, priority ratings like (A), and due dates like due:2023-05-01, can make the tasks section easier to search. See the [todo.txt primer](https://github.com/todotxt/todo.txt) for more details. Only a very basic implementation of some of the features has been done for task journal.
 
 ### Notes
 
