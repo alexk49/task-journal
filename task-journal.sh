@@ -172,13 +172,23 @@ complete_task () {
 
     echo "Completing item number: $item"
     echo "Task: "
-    sed -n "${item}p;" "$filepath"
-    echo "marked as complete"
-    # taken from todo.txt
-    # no idea why | works instead of /
-    sed -i "${item}s|^|x |" "$filepath" 
-    return
     
+    task=$(sed -n "${item}p;" "$filepath")
+    # check if task already done
+    check=$(echo "$task" | grep -E "^x .*")
+    
+    echo "$task"
+
+    if [[ -n "$check" ]]; then
+        echo "already marked as complete"
+        exit
+    else
+        echo "marked as complete"
+        # taken from todo.txt
+        # no idea why | works instead of /
+        sed -i "${item}s|^|x |" "$filepath" 
+        return
+    fi
 }
 
 
