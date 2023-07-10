@@ -38,17 +38,74 @@ yesterday=$(date -d '-1 day' '+%Y-%m-%d')
 
 usage () {
     echo "Usage: $(basename "$0") [options] [date]"
+    echo "See help for more details"
 }
 
 
 help () {
-    usage
-    echo
-    echo "If date not passed then date default is today"
-    echo "Usage: $(basename "$0") to view file"
-    echo "Usage: $(basename "$0") [-e] to edit file"
-    echo "Usage: $(basename "$0") [-k] to view key view"
-    echo "Usage: $(basename "$0") [-a] to add to file"
+
+cat << _EOF_
+--------------------------
+Task Journal example usage
+--------------------------
+
+It is recommended to create an alias for ./task-journal.sh to tj
+alias tj="path-to-task-journal.sh"
+
+This will allow the following usage:
+
+# to view/create an entry for today:
+tj
+
+# to edit today's entry:
+tj -edit
+tj -e
+
+# to add to current file
+tj -a "text for task to add"
+tj add "text for task to add"
+
+# add to notes from command line
+tj -a "text for note to add" n
+tj -a "text for note to add" notes
+
+# view/create given entry date
+tj -d yyyy-mm-dd
+tj date yyyy-mm-dd
+
+# mark task as complete
+tj do line-number-of-task-to-complete
+For example: tj do 10
+
+# edit habits file, note this may require a manual edit to your next entry file-habits | habits)
+tj -habits
+
+# view key file
+tj -k
+tj --key
+
+# view and create a review file of all done tasks in past week
+tj -r 
+tj -review
+tj review
+
+# search for a term in today's entry
+tj ls "search term"
+tj -s "search term"
+
+# search for a term across specific entry
+tj ls "search term" "yyyy-mm-dd"
+tj -s "search term" "yyyy-mm-dd"
+
+# view yesterday's file
+tj -y
+tj yesterday
+
+# edit yesterday's file
+tj -edit yesterday
+tj -e -y
+
+_EOF_
 }
 
 
@@ -201,10 +258,6 @@ edit_file () {
 
 
 view_file () {
-    if [[ "$#" == 1 ]]; then
-        filepath="$1"
-    fi
-
     # loop throuh file to allow colour highlighting 
     # set internal field seperator to blank
     # this avoids stripping of whitespace at beginning or end of lines
@@ -468,27 +521,27 @@ check_paths () {
 # loop continues whilst $1 is not empty
 while [[ -n "$1" ]]; do
     case "$1" in
-        -a | add | --add)
+        -a | -add | --add | add)
             add_to_file "$2" "$3"
             exit
             ;;
-        -d | --date | date)
+        -d | --date | -date | date)
             # usage: tj --date yyyy-mm-dd
             # view given entry
             entry_date="$2"
             ;;
-        do | --do)
+        do | --do | -do)
             complete_task "$2"
             exit
             ;;
-        -e | --edit) 
+        -e | -edit | --edit | edit) 
             edit=1
             ;;
-        -habits | habits)
+        -habits | habits | --habits)
             edit_habits
             exit
             ;;
-        -h | --help)
+        -h | --help | -help)
             help
             exit
             ;;
@@ -497,7 +550,7 @@ while [[ -n "$1" ]]; do
             view_key_file
             exit
             ;;
-        -r | --review | review)
+        -r | -review | review)
             review_past_week
             exit
             ;;
