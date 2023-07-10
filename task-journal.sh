@@ -107,7 +107,7 @@ _EOF_
         # inverse grep done tasks, headings, and blank lines
         echo "cutting off notes from previous entry"
         remainingtasks=$(sed "${notes_line_number}"q "$previous_filepath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^## tasks$" -e "^x\s" -e "^## notes$" -e "^$") 
-        echo "adding outsanding tasks from previous entry"
+        echo "adding outstanding tasks from previous entry"
         # this uses a here switch
         # to pass the remaining tasks variable to standard input
         # this is then added in after the match
@@ -243,9 +243,9 @@ search_entry () {
     check_paths "$entry_date"
     printf "$BOLD"
     head -n1 "$filepath"
+    printf "$NORMAL"
     echo
     grep --color='auto' "$search_term" "$filepath"
-    printf "$DEFAULT"
     return
 }
 
