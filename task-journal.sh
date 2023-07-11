@@ -269,30 +269,26 @@ view_file () {
     linecount=0
 
     while IFS="" read -r line || [[ -n "$line" ]]; do
+
+        linecount=$((++linecount))
+
+        # adjust line length for single digits
+        if [[ "$linecount" -lt 10 ]]; then
+            output_line="      $linecount $line"
+        else
+            output_line="     $linecount $line"
+        fi
+        
         if [[ "$line" =~ ^# ]]; then
-            # output has been fixed with this stupid way
-            if [[ "$linecount" -lt 9 ]]; then
-                printf "    %s%s%s %s%s\n" " $((++linecount))" "$BOLD" "$RED" "$line" "$NORMAL"
-            else
-                # put headings in bold and colour red
-                # must reset to normal at end
-                printf "    %s%s%s %s%s\n" "$((++linecount))" "$BOLD" "$RED" "$line" "$NORMAL"
-            fi
+            # put headings in bold and colour red
+            # must reset to normal at end
+            printf "%s%s%s%s\n" "$BOLD" "$RED" "$output_line" "$NORMAL"
         elif [[ "$line" =~ ^x ]]; then
             # mark done tasks in yellow
             # must reset to normal at end
-            if [[ "$linecount" -lt 9 ]]; then
-                printf "    %s%s %s%s\n" " $((++linecount))" "$YELLOW" "$line" "$NORMAL"
-            else
-                printf "    %s%s %s%s\n" "$((++linecount))" "$YELLOW" "$line" "$NORMAL"
-            fi
+            printf "%s%s%s\n" "$YELLOW" "$output_line" "$NORMAL"
         else
-            if [[ "$linecount" -lt 9 ]]; then
-                printf '    %s %s\n' " $((++linecount))" "$line"
-            else
-                # print line as normal
-                printf '    %s %s\n' "$((++linecount))" "$line"
-            fi
+            printf "%s\n" "$output_line"
         fi
     done < "$filepath"
     return
