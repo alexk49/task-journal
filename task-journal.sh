@@ -270,16 +270,29 @@ view_file () {
 
     while IFS="" read -r line || [[ -n "$line" ]]; do
         if [[ "$line" =~ ^# ]]; then
-            # put headings in bold and colour red
-            # must reset to normal at end
-            printf "    %s%s%s %s%s\n" "$((++linecount))" "$BOLD" "$RED" "$line" "$NORMAL"
+            # output has been fixed with this stupid way
+            if [[ "$linecount" -lt 9 ]]; then
+                printf "    %s%s%s %s%s\n" " $((++linecount))" "$BOLD" "$RED" "$line" "$NORMAL"
+            else
+                # put headings in bold and colour red
+                # must reset to normal at end
+                printf "    %s%s%s %s%s\n" "$((++linecount))" "$BOLD" "$RED" "$line" "$NORMAL"
+            fi
         elif [[ "$line" =~ ^x ]]; then
             # mark done tasks in yellow
             # must reset to normal at end
-            printf "    %s%s %s%s\n" "$((++linecount))" "$YELLOW" "$line" "$NORMAL"
+            if [[ "$linecount" -lt 9 ]]; then
+                printf "    %s%s %s%s\n" " $((++linecount))" "$YELLOW" "$line" "$NORMAL"
+            else
+                printf "    %s%s %s%s\n" "$((++linecount))" "$YELLOW" "$line" "$NORMAL"
+            fi
         else
-            # print line as normal
-            printf '    %s %s\n' "$((++linecount))" "$line"
+            if [[ "$linecount" -lt 9 ]]; then
+                printf '    %s %s\n' " $((++linecount))" "$line"
+            else
+                # print line as normal
+                printf '    %s %s\n' "$((++linecount))" "$line"
+            fi
         fi
     done < "$filepath"
     return
