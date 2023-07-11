@@ -203,7 +203,7 @@ add_to_file () {
 
     echo "adding $addition under the heading: $heading"
     sed -i -e "/^## $heading$/a $addition" $filepath 
-    view_file $entry_date
+    view_file
     return
 
 }
@@ -347,9 +347,18 @@ view_key_file () {
         # indentation deliberately removed
         # to avoid breaking here switch
         cat << _EOF_ >> "$KEY_FILE" 
+## habits
+tasks you do everyday
+
+## tasks
 task with no status is to do
 x example done task
 \ in progress task
+task with context tag +context
+(A) task with priority tag +context
+
+## notes
+notes will be made blank at the start of each day
 _EOF_
         cat "$KEY_FILE"
         return

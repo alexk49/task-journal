@@ -14,7 +14,7 @@ If you need the day before/the previous entry, you can pass:
 
 ```
 # open a file for yesterday
-journal.sh yesterday
+task-journal.sh yesterday
 ```
 
 ## Data files
@@ -24,9 +24,18 @@ journal.sh yesterday
 This is a reminder for how to keep track of the status of tasks. The only markers are to display whether a task has been done or is in progress. This is kept track of with \ and x as markers for in progress and done. A task with no markers has not yet been actioned.
 
 ```
+## habits
+tasks you do everyday
+
+## tasks
 task with no status is to do
 x example done task
 \ in progress task
+task with context tag +context
+(A) task with priority tag +context
+
+## notes
+notes will be made blank at the start of each day
 ```
 
 ### Habits file
@@ -59,34 +68,19 @@ Using +tags at the end of the task, priority ratings like (A), and due dates lik
 
 The notes section is free form, and is used for jotting down anything you like. Anything in this section will not carry over, so the notes section will display as blank for each newly created journal entry. 
 
-## Longer term aims
+## Review
 
-### Review features
-
-The eventual plan is to create a review features that will display entries from over a given time period, for example:
-
+You can view all tasks done over the past week by running:
 ```
 # see whole week
-journal.sh week
-
-# see whole month
-journal.sh
+task-journal.sh review
 ```
 
-Ideally, this display will also have a calendar embedded.
-
-### Statistics
-
-Gets stats for completed tasks and or habits with:
-
-```
-# get stats for tasks completed over week 
-journal.sh stats week
-```
+Review files are kept in a seperate folder called reviews and are datestamped with the day they are run.
 
 ## Inspirations/alternative projects
 
-This project was mainly undertaken through wanting a project to learn bash. But, also as a way to implement a deliberately, simple and bare bones journal method for tracking habits, tasks, and quick notes about the day. The task section takes a lot of inspiration (steals) from the todo.txt format.
+This project was mainly undertaken through wanting a project to learn/practise bash. But, also as a way to implement a deliberately, simple and bare bones journal method for tracking habits, tasks, and quick notes about the day. The task section takes a lot of inspiration (steals) from the todo.txt format.
 
 [How to Bullet Journal](https://www.youtube.com/watch?v=fm15cmYU0IM) video by "inventor" of the bullet journal method.
 
