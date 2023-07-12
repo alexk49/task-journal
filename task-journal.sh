@@ -121,17 +121,16 @@ check_valid_date () {
     # check valid format
     if [[ ! "$entry_date" =~ ^[0-9]{4}[-/][0-9]{2}[-/][0-9]{2}$ ]]; then 
         echo "Invalid format date given. Format must be: yyyy-mm-dd"
-        echo "Reseting date to $today"
-        entry_date=$today
+        return 1
     fi
 
     # redirect date check stderr and stdout to dev/null
     date -d "$entry_date" 2>&1>/dev/null
+
     # if exit code is 1 invalid date otherwise fine
-    if [[ "$?" == 1 ]]; then
+    if [[ "$?" -eq 1 ]]; then
         echo "Invalid date"
-        echo "Reseting date to $today"
-        entry_date="$today"
+        return 1
     fi
 }
 
@@ -184,6 +183,10 @@ _EOF_
 add_to_file () {
     entry_date="$today"
     check_paths "$today"
+    if [[ "$?" -eq 1 ]]; then
+        file_does_not_exist
+        return 1
+    fi
     
     addition="$1"
 
@@ -233,31 +236,35 @@ complete_task () {
     entry_date="$today"
     check_paths "$today"
 
+    if [[ "$?" -eq 1 ]]; then
+        file_does_not_exist
+        return 1
+    fi
+
     echo "Completing item number: $item"
-    echo "Task: "
     
     task=$(sed -n "${item}p;" "$filepath")
     # check if task already done
     check=$(echo "$task" | grep -E "^x .*")
     
-    echo "$task"
+    echo "Task: $task"
 
     if [[ -n "$check" ]]; then
         echo "already marked as complete"
-        exit
+        return 1
     else
         echo "marked as complete"
         # taken from todo.txt
         # no idea why | works instead of /
         sed -i "${item}s|^|x |" "$filepath" 
-        return
+        return 0
     fi
 }
 
 
 edit_file () {
     "$EDITOR" "$filepath"
-    return
+    return 0
 }
 
 
@@ -295,7 +302,7 @@ view_file () {
             printf "%s\n" "$output_line"
         fi
     done < "$filepath"
-    return
+    return 0
 }
 
 
@@ -309,17 +316,27 @@ search_entry () {
         exit
     elif [[ -n "$2" ]]; then
         check_valid_date "$2" 
+
+        if [[ "$?" -eq 1 ]]; then
+            exit
+        fi
     else
         entry_date="$today"
     fi
     # check paths and assign filepath
     check_paths "$entry_date"
+
+    if [[ "$?" -eq 1 ]]; then
+        file_does_not_exist
+        return 1
+    fi
+
     printf "$BOLD"
     head -n1 "$filepath"
     printf "$NORMAL"
     echo
     grep --color='auto' "$search_term" "$filepath"
-    return
+    return 0
 }
 
 
@@ -330,24 +347,34 @@ search_past_week () {
         entry_date=$(date -d "-$i day" "+%Y-%m-%d")
 
         check_paths "$entry_date"
-        printf "$BOLD"
-        head -n1 "$filepath"
-        printf "$NORMAL"
-        echo
-        grep --color='auto' "$search_term" "$filepath"
+
+        if [[ "$?" -eq 1 ]]; then
+            echo "No file found for: $entry_date"
+            continue
+        else
+            printf "$BOLD"
+            head -n1 "$filepath"
+            printf "$NORMAL"
+            echo
+            grep --color='auto' "$search_term" "$filepath"
+        fi
     done
 
-    return
+    return 0
 }
 
 
 # bring habits file up for editing
 edit_habits () {
+    echo "Warning: removing items from habits file will mean you have to manually remove these entries for next generated file."
+
     if [[ -e "$HABITS_FILE" ]]; then
         "$EDITOR" "$HABITS_FILE"
+        return 0
     else
         touch "$HABITS_FILE"
         "$EDITOR" "$HABITS_FILE"
+        return 0
     fi
 }
 
@@ -355,7 +382,7 @@ edit_habits () {
 view_key_file () {
     if [[ -e "$KEY_FILE" ]]; then
         cat "$KEY_FILE"
-        return
+        return 0
     else
         # indentation deliberately removed
         # to avoid breaking here switch
@@ -374,7 +401,7 @@ task with context tag +context
 notes will be made blank at the start of each day
 _EOF_
         cat "$KEY_FILE"
-        return
+        return 0
     fi
 }
 
@@ -398,7 +425,7 @@ get_previous_entry () {
         previous_filepath="$previous_month_folder/$previous_filename"
         
         if [ -f "$previous_filepath" ]; then
-            return 
+            return 0
         else
             count=$((count + 1)) 
         fi
@@ -406,11 +433,12 @@ get_previous_entry () {
 
     # if no file found return nothing
     echo "No previous entry found within last week"
-    return
+    return 1
 }
 
 
 review_past_week () {
+    # create review file of done tasks from past week
     # loop through past 7 days
 
     seven_days_ago=$(date -d '-7 day' '+%Y-%m-%d')
@@ -418,13 +446,13 @@ review_past_week () {
     month=$(date --date="$seven_days_ago" '+%b')
     
     if [[ ! -d "$REVIEW_FOLDER" ]]; then
-            mkdir "$REVIEW_FOLDER"
+        mkdir "$REVIEW_FOLDER"
     fi
     
     review_file_name="$today-review.md"
     review_filepath="$REVIEW_FOLDER/$review_file_name"
     
-    echo "# Tasks completed between $seven_days_ago and $today"
+    echo "Tasks completed between $seven_days_ago and $today"
 
     for (( i=0; i<7; i=i+1 )); do
         entry_date=$(date -d "-$i day" "+%Y-%m-%d")
@@ -440,6 +468,7 @@ review_past_week () {
 
     echo
     echo "Review written to: $review_filepath"
+    return 0
 
 }
 
@@ -450,7 +479,13 @@ get_done_tasks () {
     else
         entry_date="$1"
     fi
+
     check_paths "$entry_date"
+
+    if [[ "$?" -eq 1 ]]; then
+        return 1
+    fi
+
     completed_tasks=$(grep -e "^x\s" "$filepath")
     
     if [[ -n "$completed_tasks" ]]; then
@@ -463,11 +498,17 @@ get_done_tasks () {
     return
 }
 
-
+# get oustanding to do tasks
 show_todos () {
     entry_date="$today"
     
     check_paths "$entry_date"
+
+    if [[ "$?" -eq 1 ]]; then
+        file_does_not_exist
+        return 1
+    fi
+
     head -n1 "$filepath"
     echo
     printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
@@ -530,7 +571,19 @@ check_paths () {
     filename="$entry_date-jrnl.md"
 
     filepath="$month_folder/$filename"
+    
+    if [[ ! -e "$filepath" ]]; then
+        # if file does not exist return 1
+       return 1
+    else
+       return 0
+    fi
+}
 
+
+create_file () {
+    # used to create files after check paths run
+    filepath="$1"
     # if today file doesn't exist and habits file does
     # copy habits file to todays file
     if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
@@ -541,13 +594,16 @@ check_paths () {
     # if file does not exist and habits does not exist
 
     # just create file
-    elif [ ! -e "$filepath" ] && [ ! -e "$HABITS_FILE" ]; then
+    else         
         touch "$filepath"
         add_defaults "$entry_date"
-    else
-        :
     fi
+    return
+}
 
+file_does_not_exist () {
+    echo "Error: $filename does not exist"
+    echo "To make today file run task-journal.sh with no args"
     return
 }
 
@@ -612,15 +668,37 @@ done
 
 if [[ -n "$entry_date" ]]; then
     check_valid_date "$entry_date"
+    if [[ "$?" -eq 1 ]]; then
+        exit
+    fi
 else
     entry_date="$today"
 fi
 
 # check if edit or view
 if [[ -n "$edit" ]]; then
+
     check_paths "$entry_date"
-    edit_file
+
+    if [[ "$?" -eq 1 ]]; then
+        file_does_not_exist
+        exit
+    else
+        edit_file
+    fi
+
 else
+
     check_paths "$entry_date"
-    view_file
+
+    if [[ "$?" -eq 0 ]]; then
+        view_file
+    elif  [[ "$?" -eq 1 ]] && [[ "$entry_date" == "$today" ]]; then
+        create_file "$filepath"
+        echo
+        view_file
+    else
+        file_does_not_exist
+        exit
+    fi
 fi
