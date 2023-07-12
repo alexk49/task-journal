@@ -471,7 +471,8 @@ show_todos () {
     head -n1 "$filepath"
     echo
     printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
-    grep -v -E "^x\s" "$filepath" | grep -v -E "^$" | grep --color='auto' -n -v -E "^#+"
+    # have to use grep -n and then filter to get real line numbers
+    grep -n -v -E "^x\s" "$filepath" | grep -v -E "^[0-9]+:$" | grep --color='auto' -v -E "^[0-9]+:#+"
     return
 }
 
