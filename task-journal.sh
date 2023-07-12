@@ -97,6 +97,10 @@ tj -s "search term"
 tj ls "search term" "yyyy-mm-dd"
 tj -s "search term" "yyyy-mm-dd"
 
+# view remaining todo tasks for today
+tj todo
+tj -td
+
 # view yesterday's file
 tj -y
 tj yesterday
