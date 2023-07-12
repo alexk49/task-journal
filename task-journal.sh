@@ -439,6 +439,7 @@ review_past_week () {
 
 }
 
+
 get_done_tasks () {
     if [[ "$#" != 1 ]]; then
         entry_date="$today"
@@ -458,6 +459,17 @@ get_done_tasks () {
     return
 }
 
+
+show_todos () {
+    entry_date="$today"
+    
+    check_paths "$entry_date"
+    head -n1 "$filepath"
+    echo
+    printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
+    grep -v -E "^x\s" "$filepath" | grep -v -E "^$" | grep --color='auto' -n -v -E "^#+"
+    return
+}
 
 # function to check all paths of given date work
 check_paths () {
@@ -576,6 +588,10 @@ while [[ -n "$1" ]]; do
             # expected usage is
             # tj search-term optional-date-to-search
             search_entry "$2" "$3"
+            exit
+            ;;
+        -td | todo)
+            show_todos "$2"
             exit
             ;;
         -y | yesterday)
