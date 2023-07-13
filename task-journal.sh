@@ -512,8 +512,10 @@ show_todos () {
     head -n1 "$filepath"
     echo
     printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
+    notes_line_number=$(sed -n '/^## notes$/=' "$filepath")
+
     # have to use grep -n and then filter to get real line numbers
-    grep -n -v -E "^x\s" "$filepath" | grep -v -E "^[0-9]+:$" | grep --color='auto' -v -E "^[0-9]+:#+"
+    sed "${notes_line_number}"q "$filepath" | grep -n -v -E "^x\s" | grep -v -E "^[0-9]+:$" | grep --color='auto' -v -E "^[0-9]+:#+"
     return
 }
 
