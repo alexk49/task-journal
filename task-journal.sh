@@ -114,9 +114,10 @@ _EOF_
 }
 
 
-# if invalid date or no entry date set
-# then entry date is today
 check_valid_date () {
+    # if invalid date or no entry date set
+    # then entry date is today
+
     entry_date="$1"
     
     # check valid format
@@ -136,9 +137,9 @@ check_valid_date () {
 }
 
 
-
-# add default headings and undone tasks from previous day
 add_defaults () {
+    # add default headings and undone tasks from previous day
+
     if [ "$#" != 1 ]; then
         entry_date=$today
     else
@@ -302,6 +303,8 @@ view_file () {
             # mark done tasks in yellow
             # must reset to normal at end
             printf "%s%s%s\n" "$YELLOW" "$output_line" "$NORMAL"
+        elif [[ "$line" =~ ^\([Aa]\) ]]; then
+            printf "%s%s%s\n" "$MAGENTA" "$output_line" "$NORMAL"
         else
             printf "%s\n" "$output_line"
         fi
