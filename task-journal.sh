@@ -637,6 +637,9 @@ while [[ -n "$1" ]]; do
         -b | -bl | -backlog)
             check_backlog_exists
             filepath="$BACKLOG_FILE"
+            # sort backlog file in place
+            # so output will be in priority order
+            sort -o "$BACKLOG_FILE" "$BACKLOG_FILE"
             ;;
         -d | --date | -date | date)
             # usage: tj --date yyyy-mm-dd
