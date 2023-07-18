@@ -14,6 +14,7 @@ REVIEW_FOLDER="$JOURNALS_FOLDER/reviews"
 
 KEY_FILE="$DATA_FOLDER/key.md"
 HABITS_FILE="$DATA_FOLDER/habits.md"
+BACKLOG_FILE="$DATA_FOLDER/backlog.md"
 
 # unused colours kept in case of change
 # thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
@@ -269,6 +270,9 @@ edit_file () {
 
 
 view_file () {
+    if [[ "$#" == 1 ]]; then
+        filepath="$1"
+    fi
     # loop throuh file to allow colour highlighting 
     # set internal field seperator to blank
     # this avoids stripping of whitespace at beginning or end of lines
@@ -610,13 +614,29 @@ file_does_not_exist () {
 }
 
 
+check_backlog_exists () {
+    if [[ ! -e "$BACKLOG_FILE" ]]; then
+        echo "Creating $BACKLOG_FILE"
+        touch "$BACKLOG_FILE"
+    fi
+    return
+}
+
 # handle args
 # loop continues whilst $1 is not empty
+
+# actions = add, do, edit, search, view
+# file to view = today, date, backlog
+
 while [[ -n "$1" ]]; do
     case "$1" in
         -a | -add | --add | add)
             add_to_file "$2" "$3"
             exit
+            ;;
+        -b | -bl | -backlog)
+            check_backlog_exists
+            filepath="$BACKLOG_FILE"
             ;;
         -d | --date | -date | date)
             # usage: tj --date yyyy-mm-dd
@@ -668,6 +688,17 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+# adjust for backlog functionality
+if [[ -n "$filepath" ]] && [[ -n "$edit" ]]; then
+    edit_file "$filepath"
+    exit
+elif [[ -n "$filepath" ]]; then
+    view_file "$filepath"
+    exit
+else
+    :
+fi
+
 if [[ -n "$entry_date" ]]; then
     check_valid_date "$entry_date"
     if [[ "$?" -eq 1 ]]; then
@@ -687,6 +718,7 @@ if [[ -n "$edit" ]]; then
         exit
     else
         edit_file
+        exit
     fi
 
 else
@@ -695,10 +727,12 @@ else
 
     if [[ "$?" -eq 0 ]]; then
         view_file
+        exit
     elif  [[ "$?" -eq 1 ]] && [[ "$entry_date" == "$today" ]]; then
         create_file "$filepath"
         echo
         view_file
+        exit
     else
         file_does_not_exist
         exit
