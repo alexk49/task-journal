@@ -183,17 +183,8 @@ _EOF_
 
 
 add_to_file () {
-    entry_date="$today"
-    check_paths "$today"
-    if [[ "$?" -eq 1 ]]; then
-        file_does_not_exist
-        return 1
-    fi
-    
     addition="$1"
-
-    if [[ "$#" == 2 ]]; then
-        heading="$2"
+    if [[ -n "$heading" ]]; then
         # heading has to be notes or tasks
         # handling for n or t
         if [[ "$heading" == "n" ]]; then
@@ -205,13 +196,17 @@ add_to_file () {
             # so do nothing
             :
         fi
+    elif [[ "$filepath" == "$BACKLOG_FILE" ]]; then
+        heading="backlog"
+    elif [[ "$filepath" == "$HABITS_FILE" ]]; then
+        heading="habits"
     else
         # default heading is tasks
         heading="tasks"
     fi
 
     echo "adding $addition under the heading: $heading"
-    sed -i -e "/^## $heading$/a $addition" $filepath 
+    sed -i -E "/^[#]+ $heading$/a $addition" $filepath 
     view_file
     return
 
@@ -231,19 +226,8 @@ complete_task () {
         usage
         exit 1
     fi
-
-    item="$1"
     
-    # assign standard entry dates
-    entry_date="$today"
-    check_paths "$today"
-
-    if [[ "$?" -eq 1 ]]; then
-        file_does_not_exist
-        return 1
-    fi
-
-    echo "Completing item number: $item"
+    echo "Completing item number: $item from $filepath"
     
     task=$(sed -n "${item}p;" "$filepath")
     # check if task already done
@@ -271,9 +255,6 @@ edit_file () {
 
 
 view_file () {
-    if [[ "$#" == 1 ]]; then
-        filepath="$1"
-    fi
     # loop throuh file to allow colour highlighting 
     # set internal field seperator to blank
     # this avoids stripping of whitespace at beginning or end of lines
@@ -282,7 +263,7 @@ view_file () {
     # spaces in printf to match cat output
     # line numbers added manually
 
-    linecount=0
+    liecount=0
 
     while IFS="" read -r line || [[ -n "$line" ]]; do
 
@@ -304,7 +285,7 @@ view_file () {
             # must reset to normal at end
             printf "%s%s%s\n" "$YELLOW" "$output_line" "$NORMAL"
         elif [[ "$line" =~ ^\([Aa]\) ]]; then
-            printf "%s%s%s\n" "$MAGENTA" "$output_line" "$NORMAL"
+            printf "%s%s%s\n" "$BLUE" "$output_line" "$NORMAL"
         else
             printf "%s\n" "$output_line"
         fi
@@ -316,27 +297,6 @@ view_file () {
 search_entry () {
     # usage: search-term entry-date
     search_term="$1"
-    # entry date is optional
-    # if not given assign to today
-    if [[ "$2" == "week" ]]; then
-        search_past_week "$search_term"
-        exit
-    elif [[ -n "$2" ]]; then
-        check_valid_date "$2" 
-
-        if [[ "$?" -eq 1 ]]; then
-            exit
-        fi
-    else
-        entry_date="$today"
-    fi
-    # check paths and assign filepath
-    check_paths "$entry_date"
-
-    if [[ "$?" -eq 1 ]]; then
-        file_does_not_exist
-        return 1
-    fi
 
     printf "$BOLD"
     head -n1 "$filepath"
@@ -612,7 +572,10 @@ create_file () {
 
 file_does_not_exist () {
     echo "Error: $filename does not exist"
-    echo "To make today file run task-journal.sh with no args"
+
+    if [[ "$entry_date" == "$today" ]]; then
+        echo "To make today file run task-journal.sh with no args"
+    fi
     return
 }
 
@@ -628,21 +591,19 @@ check_backlog_exists () {
 # handle args
 # loop continues whilst $1 is not empty
 
-# actions = add, do, edit, search, view
-# file to view = today, date, backlog
+# ideal usage:
+# tj file action parameters
 
 while [[ -n "$1" ]]; do
     case "$1" in
         -a | -add | --add | add)
-            add_to_file "$2" "$3"
-            exit
+            action="add"
+            addition="$2"
+            heading="$3"
             ;;
         -b | -bl | -backlog)
             check_backlog_exists
             filepath="$BACKLOG_FILE"
-            # sort backlog file in place
-            # so output will be in priority order
-            sort -o "$BACKLOG_FILE" "$BACKLOG_FILE"
             ;;
         -d | --date | -date | date)
             # usage: tj --date yyyy-mm-dd
@@ -650,13 +611,16 @@ while [[ -n "$1" ]]; do
             entry_date="$2"
             ;;
         do | --do | -do)
-            complete_task "$2"
-            exit
+            action="complete"
+            item="$2"
+            #complete_task "$2"
             ;;
         -e | -edit | --edit | edit) 
+            action="edit"
             edit=1
             ;;
         -habits | habits | --habits)
+            filepath="$HABITS_FILE"
             edit_habits
             exit
             ;;
@@ -674,73 +638,66 @@ while [[ -n "$1" ]]; do
             exit
             ;;
         -s | ls | -ls | search)
+            action="search"
             # expected usage is
             # tj search-term optional-date-to-search
-            search_entry "$2" "$3"
-            exit
+            search_term="$2"
+            #search_entry "$2" "$3"
             ;;
         -td | todo)
             show_todos "$2"
             exit
             ;;
         -y | yesterday)
-            entry_date=$yesterday
-            ;;
-        ?) 
-            usage
-            exit 1
+            entry_date="$yesterday"
             ;;
     esac
     shift
 done
 
-# adjust for backlog functionality
-if [[ -n "$filepath" ]] && [[ -n "$edit" ]]; then
-    edit_file "$filepath"
-    exit
-elif [[ -n "$filepath" ]]; then
-    view_file "$filepath"
-    exit
-else
-    :
-fi
 
-if [[ -n "$entry_date" ]]; then
+if [[ -n "$filepath" ]] && [[ -z "$entry_date" ]]; then
+    # filepath assigned to global filepath
+    # do nothing
+    :
+elif [[ -n "$entry_date" ]]; then
     check_valid_date "$entry_date"
     if [[ "$?" -eq 1 ]]; then
         exit
     fi
-else
-    entry_date="$today"
-fi
-
-# check if edit or view
-if [[ -n "$edit" ]]; then
 
     check_paths "$entry_date"
 
     if [[ "$?" -eq 1 ]]; then
         file_does_not_exist
         exit
-    else
-        edit_file
-        exit
     fi
-
 else
-
+    entry_date="$today"
     check_paths "$entry_date"
 
-    if [[ "$?" -eq 0 ]]; then
-        view_file
-        exit
-    elif  [[ "$?" -eq 1 ]] && [[ "$entry_date" == "$today" ]]; then
+    if [[ "$?" -eq 1 ]]; then
         create_file "$filepath"
         echo
-        view_file
-        exit
-    else
-        file_does_not_exist
-        exit
     fi
+fi
+
+# actions = add, do, edit, search, view
+
+if [[ "$action" == "add" ]]; then
+    add_to_file "$addition" "$heading"
+    exit
+elif [[ "$action" == "complete" ]]; then
+    complete_task "$item"
+    exit
+elif [[ "$action" == "edit" ]]; then
+    edit_file
+    exit
+elif [[ "$action" == "search" ]]; then
+    search_entry "$search_term"
+    exit
+else
+    # default is view file
+    view_file
+    exit
 fi
