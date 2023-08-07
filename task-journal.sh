@@ -1,20 +1,19 @@
 #!/bin/bash
 
-# journal.sh: command line wrapper for bullet journaling in text editor
+# task-journal.sh: command line wrapper for bullet journaling in text editor
 
 # globals
+tj_dir_loc="$(dirname "$0")"
 
-# set default editor for journal
-# vim is go to default
-EDITOR=vim; export EDITOR
+TJ_CFG_FILE="$tj_dir_loc/tj.cfg"
 
-JOURNALS_FOLDER="$HOME/task-journal"
-DATA_FOLDER="$JOURNALS_FOLDER/data"
-REVIEW_FOLDER="$JOURNALS_FOLDER/reviews"
+if [[ -f "$TJ_CFG_FILE" ]]; then
+    source "$TJ_CFG_FILE"
+else
+    echo "No config file found. Please create config file named tj.cfg"
+    exit
+fi
 
-KEY_FILE="$DATA_FOLDER/key.md"
-HABITS_FILE="$DATA_FOLDER/habits.md"
-BACKLOG_FILE="$DATA_FOLDER/backlog.md"
 
 # unused colours kept in case of change
 # thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
@@ -378,7 +377,7 @@ _EOF_
 get_previous_entry () {
     current_entry=$1
     count=1
-    while [[ "$count" -le 7 ]]; do
+    while [[ "$count" -le 21 ]]; do
         previous=$(date --date="${current_entry} -${count} day" "+%Y-%m-%d")
 
         previous_year=${previous:0:4}
@@ -413,7 +412,7 @@ review_past_week () {
     month=$(date --date="$seven_days_ago" '+%b')
     
     if [[ ! -d "$REVIEW_FOLDER" ]]; then
-        mkdir "$REVIEW_FOLDER"
+        mkdir -p "$REVIEW_FOLDER"
     fi
     
     review_file_name="$today-review.md"
@@ -500,16 +499,16 @@ check_paths () {
     # check if a folder named journal exists
     # if not make it
     if [ ! -d "$JOURNALS_FOLDER" ]; then
-        echo "Deafult journal folder not found."
+        echo "Default journal folder not found."
         echo "Creating $JOURNALS_FOLDER"
-        mkdir "$JOURNALS_FOLDER"
+        mkdir -p "$JOURNALS_FOLDER"
     fi
 
     year_folder="$JOURNALS_FOLDER/$year"
 
     if [ ! -d "$year_folder" ]; then
         echo "Creating year folder for: $year"
-        mkdir "$year_folder"
+        mkdir -p "$year_folder"
     fi
 
     # month as short string
@@ -519,13 +518,13 @@ check_paths () {
     # $Home/notes/journals/2023/jun/
     if [ ! -d "$month_folder" ]; then
         echo "Creating month folder for: $month"
-        mkdir "$month_folder"
+        mkdir -p "$month_folder"
     fi
 
     # if data folder doesn't exist then make it
     if [[ ! -d "$DATA_FOLDER" ]]; then
         echo "Creating data folder"
-        mkdir "$DATA_FOLDER"
+        mkdir -p "$DATA_FOLDER"
     fi
 
     # if habits file doesn't exist
