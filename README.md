@@ -2,6 +2,8 @@
 
 A plain text bullet journal for tracking habits, tasks and note taking through bash and the editor of your choice.
 
+The app itself is still a work in a progress so changes are being made and some of the documentation is not yet complete or fully up to date.
+
 ## Basic Usage 
 
 The default with no args passed will open a .md file with today's date stamp, and all the default headings added.
