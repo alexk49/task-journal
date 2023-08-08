@@ -284,7 +284,7 @@ view_file () {
             # must reset to normal at end
             printf "%s%s%s\n" "$YELLOW" "$output_line" "$NORMAL"
         elif [[ "$line" =~ ^\([Aa]\) ]]; then
-            printf "%s%s%s\n" "$BLUE" "$output_line" "$NORMAL"
+            printf "%s%s%s%s\n" "$BOLD" "$BLUE" "$output_line" "$NORMAL"
         else
             printf "%s\n" "$output_line"
         fi
