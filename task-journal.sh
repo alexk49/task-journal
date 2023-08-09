@@ -211,6 +211,16 @@ add_to_file () {
 
 }
 
+check_if_number () {
+    # check arg is number
+    if [[ ! "$1" =~ ^[0-9]+$ ]]; then
+        echo "Task must be passed as a number" >&2
+        usage
+        exit 1
+    else
+        return 0
+    fi
+}
 
 complete_task () {
     # check args have been passed
@@ -219,13 +229,9 @@ complete_task () {
         usage
         exit 1
     fi
-    # check arg is number
-    if [[ ! "$1" =~ ^[0-9]+$ ]]; then
-        echo "Task to complete must be passed as a number" >&2
-        usage
-        exit 1
-    fi
     
+    check_if_number "$1"
+
     echo "Completing item number: $item from $filepath"
     
     task=$(sed -n "${item}p;" "$filepath")
@@ -246,6 +252,54 @@ complete_task () {
     fi
 }
 
+move_task () {
+
+  #  move_task "$sourcefile" "$item" "$destfile"
+    if [[ "$sourcefile" == "bl" ]] || [[ "$sourcefile" == "backlog" ]]; then
+        sourcefile="$BACKLOG_FILE"
+        entry_date="$today"
+        check_paths "$entry_date"
+        destfile="$filepath"
+    elif [[ "$sourcefile" == "today" ]] || [[ "$sourcefile" == "$today" ]]; then        
+        entry_date="$today"
+        check_paths "$entry_date"
+        sourcefile="$filepath"
+        destfile="$BACKLOG_FILE"
+    else
+        move_task_usage="Invalid options. Move allows you to move task from backlog to today file. Or from today to backlog.
+
+    Move usage: tj -mv source item#
+
+    Move from today file to backlog file:
+    tj -mv today item#
+    
+    Move from backlog file to today file:
+    tj -mv bl item#
+    
+If source is backlog then destination is today file. If today file is source then backlog is destination."
+
+        echo "$move_task_usage"
+        exit 1
+    fi
+
+    check_if_number "$item"
+
+    echo "moving item number: $item from ${sourcefile##*/} to ${destfile##*/}"
+    
+    task=$(sed -n "${item}p;" "$sourcefile")
+        
+    echo "Task: $task"
+    
+    if [[ "$destfile" == "$BACKLOG_FILE" ]]; then
+        echo "$task" >> "$destfile"
+    else
+        # destfile is today file
+        add_to_file "$task"
+    fi
+
+    # delete moved task from original
+    sed -i "$item"d "$sourcefile"
+}
 
 edit_file () {
     "$EDITOR" "$filepath"
@@ -632,6 +686,16 @@ while [[ -n "$1" ]]; do
             view_key_file
             exit
             ;;
+        -mv | -m | --move)
+            # usage:
+            # tj -m source-file item# destfile 
+            # tj -m bl 5 today
+            # tj -m today 5 bl
+           action="move" 
+           sourcefile="$2"
+           item="$3"
+           destfile="$4"
+           ;;
         -r | -review | review)
             review_past_week
             exit
@@ -694,6 +758,9 @@ elif [[ "$action" == "edit" ]]; then
     exit
 elif [[ "$action" == "search" ]]; then
     search_entry "$search_term"
+    exit
+elif [[ "$action" == "move" ]]; then
+    move_task "$sourcefile" "$item" "$destfile"
     exit
 else
     # default is view file
