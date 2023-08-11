@@ -140,41 +140,28 @@ add_defaults () {
     # add default headings and undone tasks from previous day
 
     if [ "$#" != 1 ]; then
-        entry_date=$today
+        entry_date="$today"
     else
-        entry_date=$1
+        entry_date="$1"
     fi
 
     echo "Writing defaults to new file"
     # add heading by 1st line address
-    sed -i "1s/^/# task journal $entry_date\n\n/" "$filepath"
-    # indention deliberate got rid of
-    # as tab characters break <<- switch
-    # write defaults to file
-    cat <<- _EOF_ >> "$filepath"
-
-## tasks
-
-## notes
-
-_EOF_
+#    sed -i -E "1s/^/# task journal $entry_date\n\n/" "$filepath"
 
     get_previous_entry "$entry_date"
     echo "Previous entry found: $(basename $previous_filepath)"
     
-    if [ -e "$previous_filepath" ] && [ -e "$HABITS_FILE" ]; then
-        # get line number of notes
-        # to then cut off anything after the notes heading
-        notes_line_number=$(sed -n '/^## notes$/=' "$previous_filepath")
-        # inverse grep contents of habits file
+    if [[ -e "$previous_filepath" ]]; then
         # inverse grep done tasks, headings, and blank lines
-        echo "cutting off notes from previous entry"
-        remainingtasks=$(sed "${notes_line_number}"q "$previous_filepath" | grep -v -f "$HABITS_FILE" | grep -v -e "--*" -e "^## tasks$" -e "^x\s" -e "^## notes$" -e "^$") 
+        remainingtasks=$(grep -Ev "^-+|^#+|^x\s|^-\s|^$|^o\s|^~\s" "$previous_filepath") 
+
         echo "adding outstanding tasks from previous entry"
         # this uses a here switch
         # to pass the remaining tasks variable to standard input
         # this is then added in after the match
-        sed -i -e "/^## tasks$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
+        sed -i -E "/^# task journal [0-9]{4}-[0-9]{2}-[0-9]{2}$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
+
     else
         :
     fi
@@ -183,29 +170,7 @@ _EOF_
 
 add_to_file () {
     addition="$1"
-    if [[ -n "$heading" ]]; then
-        # heading has to be notes or tasks
-        # handling for n or t
-        if [[ "$heading" == "n" ]]; then
-            heading="notes"
-        elif [[ "$heading" != "notes" ]]; then
-            heading="tasks"
-        else
-            # assigned heading is fine
-            # so do nothing
-            :
-        fi
-    elif [[ "$filepath" == "$BACKLOG_FILE" ]]; then
-        heading="backlog"
-    elif [[ "$filepath" == "$HABITS_FILE" ]]; then
-        heading="habits"
-    else
-        # default heading is tasks
-        heading="tasks"
-    fi
-
-    echo "adding $addition under the heading: $heading"
-    sed -i -E "/^[#]+ $heading$/a $addition" $filepath 
+    echo "$addition" >> "$filepath"
     view_file
     return
 
@@ -246,7 +211,7 @@ complete_task () {
     else
         echo "marked as complete"
         # taken from todo.txt
-        # no idea why | works instead of /
+        # | used as variable contains /
         sed -i "${item}s|^|x |" "$filepath" 
         return 0
     fi
@@ -384,20 +349,6 @@ search_past_week () {
 }
 
 
-# bring habits file up for editing
-edit_habits () {
-    echo "Warning: removing items from habits file will mean you have to manually remove these entries for next generated file."
-
-    if [[ -e "$HABITS_FILE" ]]; then
-        "$EDITOR" "$HABITS_FILE"
-        return 0
-    else
-        touch "$HABITS_FILE"
-        "$EDITOR" "$HABITS_FILE"
-        return 0
-    fi
-}
-
 # quicky view key file
 view_key_file () {
     if [[ -e "$KEY_FILE" ]]; then
@@ -413,7 +364,6 @@ tasks you do everyday
 ## tasks
 task with no status is to do
 x example done task
-\ in progress task
 task with context tag +context
 (A) task with priority tag +context
 
@@ -606,20 +556,8 @@ check_paths () {
 create_file () {
     # used to create files after check paths run
     filepath="$1"
-    # if today file doesn't exist and habits file does
-    # copy habits file to todays file
-    if [ ! -e "$filepath" ] && [ -e "$HABITS_FILE" ]; then
-        echo "Creating new file with habits"
-        cat "$HABITS_FILE" > "$filepath"
-        add_defaults "$entry_date"
-
-    # if file does not exist and habits does not exist
-
-    # just create file
-    else         
-        touch "$filepath"
-        add_defaults "$entry_date"
-    fi
+    echo "# task journal $entry_date" > "$filepath"
+    add_defaults "$entry_date"
     return
 }
 
@@ -674,8 +612,6 @@ while [[ -n "$1" ]]; do
             ;;
         -habits | habits | --habits)
             filepath="$HABITS_FILE"
-            edit_habits
-            exit
             ;;
         -h | --help | -help)
             help
