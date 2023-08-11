@@ -289,36 +289,53 @@ view_file () {
 
         linecount=$((++linecount))
 
-        # adjust line length for single digits
-        if [[ "$linecount" -lt 10 ]]; then
-            output_line="      $linecount $line"
-        else
-            output_line="     $linecount $line"
-        fi
-        
+        # apply colour codings
+        # must reset to normal at end
+
         if [[ "$line" =~ ^# ]]; then
             # put headings in bold and colour red
-            # must reset to normal at end
-            printf "%s%s%s%s\n" "$BOLD" "$RED" "$output_line" "$NORMAL"
+            output_line="$BOLD$RED$line$NORMAL"
         elif [[ "$line" =~ ^x ]]; then
-            # mark done tasks in grey
-            # must reset to normal at end
-            printf "%s%s%s%s\n" "$BOLD" "$GREY" "$output_line" "$NORMAL"
+            # mark done tasks in bold grey
+            output_line="$BOLD$GREY$line$NORMAL"
         elif [[ "$line" =~ ^~ ]]; then
-            # mark done tasks in grey
-            # must reset to normal at end
-            printf "%s%s%s\n" "$GREY" "$output_line" "$NORMAL"
+            # mark no longer needed tasks in grey
+            output_line="$GREY$line$NORMAL"
        elif [[ "$line" =~ ^! ]]; then
-            printf "%s%s%s%s\n" "$BOLD" "$GREEN" "$output_line" "$NORMAL"
+            # set marker of priority task in bold green
+            marker="${line:0:1}"
+            remainder="${line:1}"
+            output_line="$BOLD$GREEN$marker$NORMAL$remainder"
        elif [[ "$line" =~ ^\* ]]; then
-            printf "%s%s%s\n" "$GREEN" "$output_line" "$NORMAL"
+            # set task bullet point in green
+            marker="${line:0:1}"
+            remainder="${line:1}"
+            output_line="$GREEN$marker$NORMAL$remainder"
+       elif [[ "$line" =~ ^- ]]; then
+            # put note marker in magenta/purple
+            marker="${line:0:1}"
+            remainder="${line:1}"
+            output_line="$BOLD$MAGENTA$marker$NORMAL$remainder"
        elif [[ "$line" =~ ^o ]]; then
-            printf "%s%s%s\n" "$YELLOW" "$output_line" "$NORMAL"
+            marker="${line:0:1}"
+            remainder="${line:1}"
+            output_line="$YELLOW$marker$NORMAL$remainder"
         elif [[ "$line" =~ ^\([Aa]\) ]]; then
-            printf "%s%s%s%s\n" "$BOLD" "$BLUE" "$output_line" "$NORMAL"
+            output_line="$BOLD$BLUE$line$NORMAL"
         else
-            printf "%s\n" "$output_line"
+            output_line="$line"
         fi
+
+        # adjust line length for single digits
+        # and indent lines for better display
+        if [[ "$linecount" -lt 10 ]]; then
+            output_line="      $linecount $output_line"
+        else
+            output_line="     $linecount $output_line"
+        fi
+
+        printf "%s\n" "$output_line"
+
     done < "$filepath"
     return 0
 }
@@ -368,6 +385,7 @@ check_key_file_exists () {
         # to avoid breaking here switch
         cat << _EOF_ >> "$KEY_FILE" 
 classifications:
+
 # heading
 ## sub heading
 * task
@@ -375,6 +393,7 @@ classifications:
 o event 
 
 statuses:
+
 (A) * prioritied task with priority levels
 ! * prioritised task
 > * task to be moved to futurelog/backlog
@@ -383,6 +402,7 @@ x * done task
 * task with tags +project @context
 
 backlog specific:
+
 * daily task rec:+1d
 * every weekday task rec:+1b
 * recurring task rec:+1w due:2023-04-13
