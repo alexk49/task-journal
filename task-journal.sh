@@ -17,6 +17,7 @@ fi
 
 # unused colours kept in case of change
 # thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
+# and thanks - https://unix.stackexchange.com/questions/269077/tput-setaf-color-table-how-to-determine-color-codes
 BLACK=$(tput setaf 0)
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -27,6 +28,7 @@ BLUE=$(tput setaf 4)
 MAGENTA=$(tput setaf 5)
 CYAN=$(tput setaf 6)
 WHITE=$(tput setaf 7)
+GREY=$(tput setaf 8)
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 UNDERLINE=$(tput smul)
@@ -170,8 +172,8 @@ add_defaults () {
 
 add_to_file () {
     addition="$1"
+    echo "adding $addition to $filepath"
     echo "$addition" >> "$filepath"
-    view_file
     return
 
 }
@@ -299,8 +301,18 @@ view_file () {
             # must reset to normal at end
             printf "%s%s%s%s\n" "$BOLD" "$RED" "$output_line" "$NORMAL"
         elif [[ "$line" =~ ^x ]]; then
-            # mark done tasks in yellow
+            # mark done tasks in grey
             # must reset to normal at end
+            printf "%s%s%s%s\n" "$BOLD" "$GREY" "$output_line" "$NORMAL"
+        elif [[ "$line" =~ ^~ ]]; then
+            # mark done tasks in grey
+            # must reset to normal at end
+            printf "%s%s%s\n" "$GREY" "$output_line" "$NORMAL"
+       elif [[ "$line" =~ ^! ]]; then
+            printf "%s%s%s%s\n" "$BOLD" "$GREEN" "$output_line" "$NORMAL"
+       elif [[ "$line" =~ ^\* ]]; then
+            printf "%s%s%s\n" "$GREEN" "$output_line" "$NORMAL"
+       elif [[ "$line" =~ ^o ]]; then
             printf "%s%s%s\n" "$YELLOW" "$output_line" "$NORMAL"
         elif [[ "$line" =~ ^\([Aa]\) ]]; then
             printf "%s%s%s%s\n" "$BOLD" "$BLUE" "$output_line" "$NORMAL"
@@ -350,27 +362,33 @@ search_past_week () {
 
 
 # quicky view key file
-view_key_file () {
-    if [[ -e "$KEY_FILE" ]]; then
-        cat "$KEY_FILE"
-        return 0
-    else
+check_key_file_exists () {
+    if [[ ! -e "$KEY_FILE" ]]; then
         # indentation deliberately removed
         # to avoid breaking here switch
         cat << _EOF_ >> "$KEY_FILE" 
-## habits
-tasks you do everyday
+classifications:
+# heading
+## sub heading
+* task
+- note
+o event 
 
-## tasks
-task with no status is to do
-x example done task
-task with context tag +context
-(A) task with priority tag +context
+statuses:
+(A) * prioritied task with priority levels
+! * prioritised task
+> * task to be moved to futurelog/backlog
+x * done task
+~ * no longer needed task
+* task with tags +project @context
 
-## notes
-notes will be made blank at the start of each day
+backlog specific:
+* daily task rec:+1d
+* every weekday task rec:+1b
+* recurring task rec:+1w due:2023-04-13
+* task with due date due:2023-08-09
 _EOF_
-        cat "$KEY_FILE"
+    else
         return 0
     fi
 }
@@ -389,8 +407,8 @@ get_previous_entry () {
 
         previous_year_folder="$JOURNALS_FOLDER/$previous_year"
         previous_month_folder="$previous_year_folder/$previous_month"
-        # format will be yyyy-mm-dd-jrnl.md
-        previous_filename="$previous-jrnl.md"
+        # format will be yyyy-mm-dd-jrnl.txt
+        previous_filename="$previous-jrnl.txt"
 
         previous_filepath="$previous_month_folder/$previous_filename"
         
@@ -419,7 +437,7 @@ review_past_week () {
         mkdir -p "$REVIEW_FOLDER"
     fi
     
-    review_file_name="$today-review.md"
+    review_file_name="$today-review.txt"
     review_filepath="$REVIEW_FOLDER/$review_file_name"
     
     echo "Tasks completed between $seven_days_ago and $today"
@@ -539,8 +557,8 @@ check_paths () {
         echo -e "## habits\n" > "$HABITS_FILE"
     fi
 
-    # format will be yyyy-mm-dd-jrnl.md
-    filename="$entry_date-jrnl.md"
+    # format will be yyyy-mm-dd-jrnl.txt
+    filename="$entry_date-jrnl.txt"
 
     filepath="$month_folder/$filename"
     
@@ -618,9 +636,8 @@ while [[ -n "$1" ]]; do
             exit
             ;;
         -k | --key)
-            echo "Key file: "
-            view_key_file
-            exit
+            filepath="$KEY_FILE"
+            check_key_file_exists
             ;;
         -mv | -m | --move)
             # usage:
