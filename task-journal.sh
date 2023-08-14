@@ -37,6 +37,7 @@ UNDERLINE=$(tput smul)
 today=$(date +"%Y-%m-%d")
 yesterday=$(date -d '-1 day' '+%Y-%m-%d')
 
+TOP_HEADING="/^# task journal [0-9]{4}-[0-9]{2}-[0-9]{2}$"
 
 usage () {
     echo "Usage: $(basename "$0") [options] [date]"
@@ -141,17 +142,16 @@ check_valid_date () {
 add_defaults () {
     # add default headings and undone tasks from previous day
 
-    if [ "$#" != 1 ]; then
+    if [[ "$#" != 1 ]]; then
         entry_date="$today"
     else
         entry_date="$1"
     fi
 
     echo "Writing defaults to new file"
-    # add heading by 1st line address
-#    sed -i -E "1s/^/# task journal $entry_date\n\n/" "$filepath"
 
     get_previous_entry "$entry_date"
+
     echo "Previous entry found: $(basename $previous_filepath)"
     
     if [[ -e "$previous_filepath" ]]; then
@@ -164,9 +164,35 @@ add_defaults () {
         # this is then added in after the match
         sed -i -E "/^# task journal [0-9]{4}-[0-9]{2}-[0-9]{2}$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
 
+        check_for_reminders
+
     else
         :
     fi
+}
+
+
+check_for_reminders () {
+    # loop through reminders file
+    # if due date is today, then add to newly created file
+    echo "checking for reminders"
+
+    linecount=0
+
+    while IFS="" read -r line || [[ -n "$line" ]]
+    do
+        linecount=$((++linecount))
+
+        if [[ "$line" =~ due:$today ]]; then
+            # item due today
+            item="$linecount"
+
+            sed -i -E "$TOP_HEADING/a $line" "$filepath"
+            
+            # delete from original
+            sed -i "$item"d "$REMINDERS_FILE"
+        fi
+    done < "$REMINDERS_FILE"
 }
 
 
@@ -221,9 +247,15 @@ complete_task () {
 
 move_task () {
 
-  #  move_task "$sourcefile" "$item" "$destfile"
+    #  move_task "$sourcefile" "$item" "$destfile"
+
     if [[ "$sourcefile" == "td" ]] || [[ "$sourcefile" == "todo" ]]; then
         sourcefile="$TODO_FILE"
+        entry_date="$today"
+        check_paths "$entry_date"
+        destfile="$filepath"
+    elif [[ "$sourcefile" == "reminders" ]]; then        
+        sourcefile="$REMINDERS_FILE"
         entry_date="$today"
         check_paths "$entry_date"
         destfile="$filepath"
@@ -283,7 +315,7 @@ view_file () {
     # spaces in printf to match cat output
     # line numbers added manually
 
-    liecount=0
+    linecount=0
 
     while IFS="" read -r line || [[ -n "$line" ]]; do
 
@@ -663,6 +695,9 @@ while [[ -n "$1" ]]; do
            item="$3"
            destfile="$4"
            ;;
+        -rem | -reminders)
+            filepath="$REMINDERS_FILE"
+            ;;
         -r | -review | review)
             review_past_week
             exit
