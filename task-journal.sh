@@ -222,8 +222,8 @@ complete_task () {
 move_task () {
 
   #  move_task "$sourcefile" "$item" "$destfile"
-    if [[ "$sourcefile" == "bl" ]] || [[ "$sourcefile" == "backlog" ]]; then
-        sourcefile="$BACKLOG_FILE"
+    if [[ "$sourcefile" == "td" ]] || [[ "$sourcefile" == "todo" ]]; then
+        sourcefile="$TODO_FILE"
         entry_date="$today"
         check_paths "$entry_date"
         destfile="$filepath"
@@ -231,19 +231,19 @@ move_task () {
         entry_date="$today"
         check_paths "$entry_date"
         sourcefile="$filepath"
-        destfile="$BACKLOG_FILE"
+        destfile="$TODO_FILE"
     else
-        move_task_usage="Invalid options. Move allows you to move task from backlog to today file. Or from today to backlog.
+        move_task_usage="Invalid options. Move allows you to move task from todo to today file. Or from today to todo.
 
     Move usage: tj -mv source item#
 
-    Move from today file to backlog file:
+    Move from today file to todo file:
     tj -mv today item#
     
-    Move from backlog file to today file:
+    Move from todo file to today file:
     tj -mv bl item#
     
-If source is backlog then destination is today file. If today file is source then backlog is destination."
+If source is todo then destination is today file. If today file is source then todo is destination."
 
         echo "$move_task_usage"
         exit 1
@@ -257,7 +257,7 @@ If source is backlog then destination is today file. If today file is source the
         
     echo "Task: $task"
     
-    if [[ "$destfile" == "$BACKLOG_FILE" ]]; then
+    if [[ "$destfile" == "$TODO_FILE" ]]; then
         echo "$task" >> "$destfile"
     else
         # destfile is today file
@@ -396,12 +396,12 @@ statuses:
 
 (A) * prioritied task with priority levels
 ! * prioritised task
-> * task to be moved to futurelog/backlog
+> * task to be moved to futurelog/todo
 x * done task
 ~ * no longer needed task
 * task with tags +project @context
 
-backlog specific:
+todo specific:
 
 * daily task rec:+1d
 * every weekday task rec:+1b
@@ -563,12 +563,6 @@ check_paths () {
         mkdir -p "$month_folder"
     fi
 
-    # if data folder doesn't exist then make it
-    if [[ ! -d "$DATA_FOLDER" ]]; then
-        echo "Creating data folder"
-        mkdir -p "$DATA_FOLDER"
-    fi
-
     # if habits file doesn't exist
     # create empty habits file
     if [[ ! -e "$HABITS_FILE" ]]; then
@@ -609,10 +603,10 @@ file_does_not_exist () {
 }
 
 
-check_backlog_exists () {
-    if [[ ! -e "$BACKLOG_FILE" ]]; then
-        echo "Creating $BACKLOG_FILE"
-        touch "$BACKLOG_FILE"
+check_todo_exists () {
+    if [[ ! -e "$TODO_FILE" ]]; then
+        echo "Creating $TODO_FILE"
+        touch "$TODO_FILE"
     fi
     return
 }
@@ -630,9 +624,9 @@ while [[ -n "$1" ]]; do
             addition="$2"
             heading="$3"
             ;;
-        -b | -bl | -backlog)
-            check_backlog_exists
-            filepath="$BACKLOG_FILE"
+        -td | -todo)
+            check_todo_exists
+            filepath="$TODO_FILE"
             ;;
         -d | --date | -date | date)
             # usage: tj --date yyyy-mm-dd
