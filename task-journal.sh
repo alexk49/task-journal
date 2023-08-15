@@ -777,7 +777,7 @@ elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
 elif [[ "$action" == "review" ]] && [[ "$review_type" == "week" ]]; then
 #    "$EDITOR" -o "$filepath" "$TODO_FILE" "$REMINDERS_FILE" "$HABITS_FILE"
 
-    "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $REMINDERS_FILE" -c 'wincmd l' -c "split $HABITS_FILE"
+    "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $PROJECTS_FILE" -c 'wincmd l' -c "split $SOMEDAY_FILE"
     exit
 else
     # default is view file
