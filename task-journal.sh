@@ -57,60 +57,79 @@ alias tj="path-to-task-journal.sh"
 
 This will allow the following usage:
 
-# to view/create an entry for today:
-tj
-
-# to edit today's entry:
-tj -edit
-tj -e
-
 # to add to current file
 tj -a "text for task to add"
 tj add "text for task to add"
 
-# add to notes from command line
-tj -a "text for note to add" n
-tj -a "text for note to add" notes
+# add to alternate file
+tj [alt-file] add "text to add"
 
-# view/create given entry date
+Alternate files can be defined via:
+
+# alternate date entry:
 tj -d yyyy-mm-dd
-tj date yyyy-mm-dd
 
-# mark task as complete
-tj do line-number-of-task-to-complete
-For example: tj do 10
-
-# edit habits file, note this may require a manual edit to your next entry file-habits | habits)
+# habits file
+tj -hab
 tj -habits
 
-# view key file
+# key file
 tj -k
-tj --key
+tj -key
 
-# view and create a review file of all done tasks in past week
-tj -r 
-tj -review
-tj review
+# reminders file
+tj -rem
+tj -reminders
 
-# search for a term in today's entry
-tj ls "search term"
-tj -s "search term"
-
-# search for a term across specific entry
-tj ls "search term" "yyyy-mm-dd"
-tj -s "search term" "yyyy-mm-dd"
-
-# view remaining todo tasks for today
-tj todo
-tj -td
-
-# view yesterday's file
+# entry for yesterday
+# or previous entry if yesterday file does not exist
 tj -y
-tj yesterday
+tj -yesterday
 
-# edit yesterday's file
-tj -edit yesterday
-tj -e -y
+Any of the below actions can be mixed with any of the alternate files.
+
+# mark item as complete by line number
+tj -do ITEM#
+
+# open file in specified editor
+tj -e
+
+# move item from one file to another
+tj -mv source-file ITEM# [OPT destfile]
+tj -mv source-file ITEM# [OPT destfile]
+
+Move allows you to move task from todo to today file. Or from today to todo.
+
+Move from today file to todo file:
+tj -mv today item#
+
+Move from todo file to today file:
+tj -mv -td item#
+
+If source is todo then destination is today file. If today file is source then todo is destination."
+
+# search file
+tj ls "search term"
+tj search "search term"
+
+The following are one off actions:
+
+# open today entry alongside todo list
+tj -dr
+tj -dayreview
+
+# open today entry, todo.txt, projects file, and someday file in editor
+tj -wr
+tj -weekreview
+
+# show any uncompleted task items in today file
+tj -std
+tj stilltd
+
+# view all tasks completed within past week
+# this will output to terminal as well as creating a file in the reviews folder
+tj -r
+tj -review
 
 _EOF_
 }
@@ -432,6 +451,7 @@ statuses:
 x * done task
 ~ * no longer needed task
 * task with tags +project @context
+/ on hold task
 
 todo specific:
 
@@ -653,7 +673,6 @@ while [[ -n "$1" ]]; do
         -a | -add | --add | add)
             action="add"
             addition="$2"
-            heading="$3"
             ;;
         -dr | -dayreview)
             action="review"
@@ -673,14 +692,14 @@ while [[ -n "$1" ]]; do
             action="edit"
             edit=1
             ;;
-        -habits | habits | --habits)
+        -habits | -hab | habits)
             filepath="$HABITS_FILE"
             ;;
         -h | --help | -help)
             help
             exit
             ;;
-        -k | --key)
+        -k | -key | key)
             filepath="$KEY_FILE"
             check_key_file_exists
             ;;
@@ -703,10 +722,7 @@ while [[ -n "$1" ]]; do
             ;;
         -s | ls | -ls | search)
             action="search"
-            # expected usage is
-            # tj search-term optional-date-to-search
             search_term="$2"
-            #search_entry "$2" "$3"
             ;;
         -std | stilltd)
             show_still_todos "$2"
@@ -775,8 +791,6 @@ elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
     "$EDITOR" -O "$filepath" "$TODO_FILE"
     exit
 elif [[ "$action" == "review" ]] && [[ "$review_type" == "week" ]]; then
-#    "$EDITOR" -o "$filepath" "$TODO_FILE" "$REMINDERS_FILE" "$HABITS_FILE"
-
     "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $PROJECTS_FILE" -c 'wincmd l' -c "split $SOMEDAY_FILE"
     exit
 else
