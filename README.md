@@ -38,8 +38,7 @@ Further usage examples can be viewed by:
 tj -help
 ```
 
-Further examples are also included [below](##Further).
-
+Further examples are also included [below](#Further Usage Examples).
 
 ## Data files
 
@@ -155,6 +154,10 @@ This project was mainly undertaken through wanting a project to learn/practise b
 [Bash Journaling](https://jodavaho.io/posts/bash-journalling.html) and [Bullet Journaling](https://jodavaho.io/posts/bullet-journalling.html).
 
 [Getting things done](https://gettingthingsdone.com/)
+
+[Plain text productivity](https://plaintext-productivity.net/)
+
+[Martin Pitt synced plaintext TODO notes](https://piware.de/post/2020-09-26-todo-notes/)
 
 ## Further Usage Examples
 
