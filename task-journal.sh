@@ -539,7 +539,7 @@ get_done_tasks () {
 }
 
 # get oustanding to do tasks
-show_todos () {
+show_still_todos () {
     entry_date="$today"
     
     check_paths "$entry_date"
@@ -552,10 +552,9 @@ show_todos () {
     head -n1 "$filepath"
     echo
     printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
-    notes_line_number=$(sed -n '/^## notes$/=' "$filepath")
 
-    # have to use grep -n and then filter to get real line numbers
-    sed "${notes_line_number}"q "$filepath" | grep -n -v -E "^x\s" | grep -v -E "^[0-9]+:$" | grep --color='auto' -v -E "^[0-9]+:#+"
+    #grep --color='auto' -n -Ev "^[0-9]+:x\s.*$|^[0-9]+#+.*$|^[0-9]+:-.*$|^[0-9]+:$|^[0-9]+:o\s$|^[0-9]+:~\s$" "$filepath"
+    grep -n -Ev "^x\s.*$|^#+.*$|^-.*$|^$|^o\s$|^~\s$" "$filepath"
     return
 }
 
@@ -656,9 +655,9 @@ while [[ -n "$1" ]]; do
             addition="$2"
             heading="$3"
             ;;
-        -td | -todo)
-            check_todo_exists
-            filepath="$TODO_FILE"
+        -dr | -dayreview)
+            action="review"
+            review_type="day"
             ;;
         -d | --date | -date | date)
             # usage: tj --date yyyy-mm-dd
@@ -709,10 +708,18 @@ while [[ -n "$1" ]]; do
             search_term="$2"
             #search_entry "$2" "$3"
             ;;
-        -td | todo)
-            show_todos "$2"
+        -std | stilltd)
+            show_still_todos "$2"
             exit
             ;;
+        -td | -todo)
+            check_todo_exists
+            filepath="$TODO_FILE"
+            ;;
+        -weekreview | -wr)
+            action="review"
+            review_type="week"
+            ;; 
         -y | yesterday)
             entry_date="$yesterday"
             ;;
@@ -747,7 +754,7 @@ else
     fi
 fi
 
-# actions = add, do, edit, search, view
+# actions = add, do, edit, review, search, view
 
 if [[ "$action" == "add" ]]; then
     add_to_file "$addition" "$heading"
@@ -763,6 +770,14 @@ elif [[ "$action" == "search" ]]; then
     exit
 elif [[ "$action" == "move" ]]; then
     move_task "$sourcefile" "$item" "$destfile"
+    exit
+elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
+    "$EDITOR" -O "$filepath" "$TODO_FILE"
+    exit
+elif [[ "$action" == "review" ]] && [[ "$review_type" == "week" ]]; then
+#    "$EDITOR" -o "$filepath" "$TODO_FILE" "$REMINDERS_FILE" "$HABITS_FILE"
+
+    "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $REMINDERS_FILE" -c 'wincmd l' -c "split $HABITS_FILE"
     exit
 else
     # default is view file
