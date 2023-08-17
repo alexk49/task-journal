@@ -183,6 +183,7 @@ add_defaults () {
         # this is then added in after the match
         sed -i -E "/^# task journal [0-9]{4}-[0-9]{2}-[0-9]{2}$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
 
+        check_reminders_exists
         check_for_reminders
 
     else
@@ -582,7 +583,7 @@ show_still_todos () {
 check_paths () {
 
     # set todays today if no args passed
-    if [ "$#" != 1 ]; then
+    if [[ "$#" != 1 ]]; then
         entry_date=$today
     else
         entry_date=$1
@@ -597,41 +598,34 @@ check_paths () {
         mkdir -p "$JOURNALS_FOLDER"
     fi
 
-    year_folder="$JOURNALS_FOLDER/$year"
-
-    if [ ! -d "$year_folder" ]; then
-        echo "Creating year folder for: $year"
-        mkdir -p "$year_folder"
-    fi
-
-    # month as short string
-    month_folder="$year_folder/$month"
-
-    # folder structure by year then month
-    # $Home/notes/journals/2023/jun/
-    if [ ! -d "$month_folder" ]; then
-        echo "Creating month folder for: $month"
-        mkdir -p "$month_folder"
-    fi
-
-    # if habits file doesn't exist
-    # create empty habits file
-    if [[ ! -e "$HABITS_FILE" ]]; then
-        echo "Creating new habits file"
-        touch "$HABITS_FILE"
-        echo -e "## habits\n" > "$HABITS_FILE"
-    fi
-
     # format will be yyyy-mm-dd-jrnl.txt
     filename="$entry_date-jrnl.txt"
 
-    filepath="$month_folder/$filename"
+    filepath="$JOURNALS_FOLDER/$filename"
     
     if [[ ! -e "$filepath" ]]; then
         # if file does not exist return 1
        return 1
     else
        return 0
+    fi
+}
+
+
+check_reminders_file_exists() {
+    if [[ ! -e "$REMINDERS_FILE" ]]; then
+        touch "$REMINDERS_FILE"
+    fi
+}
+
+
+check_habits_file_exists () {
+    # if habits file doesn't exist
+    # create empty habits file
+    if [[ ! -e "$HABITS_FILE" ]]; then
+        echo "Creating new habits file"
+        touch "$HABITS_FILE"
+        echo -e "## habits\n" > "$HABITS_FILE"
     fi
 }
 
@@ -694,6 +688,7 @@ while [[ -n "$1" ]]; do
             ;;
         -habits | -hab | habits)
             filepath="$HABITS_FILE"
+            check_habits_file_exists
             ;;
         -h | --help | -help)
             help
@@ -715,6 +710,7 @@ while [[ -n "$1" ]]; do
            ;;
         -rem | -reminders)
             filepath="$REMINDERS_FILE"
+            check_reminders_exists
             ;;
         -r | -review | review)
             review_past_week
