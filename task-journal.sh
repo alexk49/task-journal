@@ -183,7 +183,7 @@ add_defaults () {
         # this is then added in after the match
         sed -i -E "/^# task journal [0-9]{4}-[0-9]{2}-[0-9]{2}$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
 
-        check_reminders_exists
+        check_reminders_file_exists
         check_for_reminders
 
     else
@@ -708,9 +708,13 @@ while [[ -n "$1" ]]; do
            item="$3"
            destfile="$4"
            ;;
+        -qr | -quickreview)
+            action="review"
+            review_type="quick"
+            ;;
         -rem | -reminders)
             filepath="$REMINDERS_FILE"
-            check_reminders_exists
+            check_reminders_file_exists
             ;;
         -r | -review | review)
             review_past_week
@@ -782,6 +786,17 @@ elif [[ "$action" == "search" ]]; then
     exit
 elif [[ "$action" == "move" ]]; then
     move_task "$sourcefile" "$item" "$destfile"
+    exit
+elif [[ "$action" == "review" ]] && [[ "$review_type" == "quick" ]]; then
+    # check if notes file exists
+    # created by quick-note.sh script
+
+    notes_filepath="$JOURNALS_FOLDER/$today-notes.txt"
+    if [[ -e "$notes_filepath" ]]; then
+        "$EDITOR" -O "$filepath" "$notes_filepath" -c "split $TODO_FILE"
+    else
+        "$EDITOR" -O "$filepath" "$TODO_FILE"
+    fi
     exit
 elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
     "$EDITOR" -O "$filepath" "$TODO_FILE"
