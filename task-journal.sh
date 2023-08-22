@@ -478,13 +478,11 @@ get_previous_entry () {
         previous_year=${previous:0:4}
         previous_month=$(date --date="$previous" '+%b')
 
-        previous_year_folder="$JOURNALS_FOLDER/$previous_year"
-        previous_month_folder="$previous_year_folder/$previous_month"
         # format will be yyyy-mm-dd-jrnl.txt
         previous_filename="$previous-jrnl.txt"
 
-        previous_filepath="$previous_month_folder/$previous_filename"
-        
+        previous_filepath="$JOURNALS_FOLDER/$previous_filename"
+
         if [ -f "$previous_filepath" ]; then
             return 0
         else
