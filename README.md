@@ -1,4 +1,4 @@
-# Task Journal 
+# Task Journal
 
 A plain text bullet journal for tracking habits, tasks and note taking through bash and the editor of your choice.
 
@@ -8,7 +8,7 @@ The app itself is still a work in a progress so changes are being made and some 
 
 Before use the example-tj.cfg must be edited to tj.cfg and updated with the desired filepaths for key files.
 
-## Basic Usage 
+## Basic Usage
 
 Expected usage is:
 ```
@@ -58,7 +58,7 @@ classifications:
 ## sub heading
 * task
 - note
-o event 
+o event
 
 statuses:
 
@@ -217,7 +217,7 @@ tj -mv today item#
 
 Move from todo file to today file:
 tj -mv -td item#
-```  
+```
 
 If source is todo then destination is today file. If today file is source then todo is destination."
 
@@ -246,4 +246,13 @@ tj stilltd
 # this will output to terminal as well as creating a file in the reviews folder
 tj -r
 tj -review
+```
+
+## Testing
+
+All tests have been written using the [bats test framework](https://github.com/bats-core/bats-core). Only the bats-core module is required.
+
+Tests can be run manually from the root dir with:
+```
+bats test/test.bat
 ```
