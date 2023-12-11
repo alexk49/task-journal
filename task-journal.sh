@@ -2,36 +2,16 @@
 
 # task-journal.sh: command line wrapper for bullet journaling in text editor
 
-# globals
-tj_dir_loc="$(dirname "$0")"
-
-TJ_CFG_FILE="$tj_dir_loc/tj.cfg"
-
-if [[ -f "$TJ_CFG_FILE" ]]; then
-    source "$TJ_CFG_FILE"
-else
-    echo "No config file found. Please create config file named tj.cfg"
-    exit
-fi
-
-
-# unused colours kept in case of change
 # thanks - https://stackoverflow.com/questions/4332478/read-the-current-text-color-in-a-xterm/4332530#4332530
 # and thanks - https://unix.stackexchange.com/questions/269077/tput-setaf-color-table-how-to-determine-color-codes
-BLACK=$(tput setaf 0)
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
-LIME_YELLOW=$(tput setaf 190)
-POWDER_BLUE=$(tput setaf 153)
 BLUE=$(tput setaf 4)
 MAGENTA=$(tput setaf 5)
-CYAN=$(tput setaf 6)
-WHITE=$(tput setaf 7)
 GREY=$(tput setaf 8)
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-UNDERLINE=$(tput smul)
 
 # get todays date as file name
 today=$(date +"%Y-%m-%d")
@@ -43,7 +23,6 @@ usage () {
     echo "Usage: $(basename "$0") [options] [date]"
     echo "See help for more details"
 }
-
 
 help () {
 
@@ -140,9 +119,9 @@ check_valid_date () {
     # then entry date is today
 
     entry_date="$1"
-    
+
     # check valid format
-    if [[ ! "$entry_date" =~ ^[0-9]{4}[-/][0-9]{2}[-/][0-9]{2}$ ]]; then 
+    if [[ ! "$entry_date" =~ ^[0-9]{4}[-/][0-9]{2}[-/][0-9]{2}$ ]]; then
         echo "Invalid format date given. Format must be: yyyy-mm-dd"
         return 1
     fi
@@ -172,10 +151,10 @@ add_defaults () {
     get_previous_entry "$entry_date"
 
     echo "Previous entry found: $(basename $previous_filepath)"
-    
+
     if [[ -e "$previous_filepath" ]]; then
         # inverse grep done tasks, headings, and blank lines
-        remainingtasks=$(grep -Ev "^-+|^#+|^x\s|^-\s|^$|^o\s|^~\s" "$previous_filepath") 
+        remainingtasks=$(grep -Ev "^-+|^#+|^x\s|^-\s|^$|^o\s|^~\s" "$previous_filepath")
 
         echo "adding outstanding tasks from previous entry"
         # this uses a here switch
@@ -185,9 +164,6 @@ add_defaults () {
 
         check_reminders_file_exists
         check_for_reminders
-
-    else
-        :
     fi
 }
 
@@ -208,7 +184,7 @@ check_for_reminders () {
             item="$linecount"
 
             sed -i -E "$TOP_HEADING/a $line" "$filepath"
-            
+
             # delete from original
             sed -i "$item"d "$REMINDERS_FILE"
         fi
@@ -242,15 +218,15 @@ complete_task () {
         usage
         exit 1
     fi
-    
+
     check_if_number "$1"
 
     echo "Completing item number: $item from $filepath"
-    
+
     task=$(sed -n "${item}p;" "$filepath")
     # check if task already done
     check=$(echo "$task" | grep -E "^x .*")
-    
+
     echo "Task: $task"
 
     if [[ -n "$check" ]]; then
@@ -260,7 +236,7 @@ complete_task () {
         echo "marked as complete"
         # taken from todo.txt
         # | used as variable contains /
-        sed -i "${item}s|^|x |" "$filepath" 
+        sed -i "${item}s|^|x |" "$filepath"
         return 0
     fi
 }
@@ -274,12 +250,12 @@ move_task () {
         entry_date="$today"
         check_paths "$entry_date"
         destfile="$filepath"
-    elif [[ "$sourcefile" == "reminders" ]]; then        
+    elif [[ "$sourcefile" == "reminders" ]]; then
         sourcefile="$REMINDERS_FILE"
         entry_date="$today"
         check_paths "$entry_date"
         destfile="$filepath"
-    elif [[ "$sourcefile" == "today" ]] || [[ "$sourcefile" == "$today" ]]; then        
+    elif [[ "$sourcefile" == "today" ]] || [[ "$sourcefile" == "$today" ]]; then
         entry_date="$today"
         check_paths "$entry_date"
         sourcefile="$filepath"
@@ -291,10 +267,10 @@ move_task () {
 
     Move from today file to todo file:
     tj -mv today item#
-    
+
     Move from todo file to today file:
     tj -mv bl item#
-    
+
 If source is todo then destination is today file. If today file is source then todo is destination."
 
         echo "$move_task_usage"
@@ -304,11 +280,11 @@ If source is todo then destination is today file. If today file is source then t
     check_if_number "$item"
 
     echo "moving item number: $item from ${sourcefile##*/} to ${destfile##*/}"
-    
+
     task=$(sed -n "${item}p;" "$sourcefile")
-        
+
     echo "Task: $task"
-    
+
     if [[ "$destfile" == "$TODO_FILE" ]]; then
         echo "$task" >> "$destfile"
     else
@@ -327,11 +303,11 @@ edit_file () {
 
 
 view_file () {
-    # loop throuh file to allow colour highlighting 
+    # loop throuh file to allow colour highlighting
     # set internal field seperator to blank
     # this avoids stripping of whitespace at beginning or end of lines
     # colorized text taken from https://stackoverflow.com/questions/5412761/using-colors-with-printf/5413029#5413029
-    
+
     # spaces in printf to match cat output
     # line numbers added manually
 
@@ -397,9 +373,9 @@ search_entry () {
     # usage: search-term entry-date
     search_term="$1"
 
-    printf "$BOLD"
+    printf "%s" "$BOLD"
     head -n1 "$filepath"
-    printf "$NORMAL"
+    printf "%s" "$NORMAL"
     echo
     grep --color='auto' "$search_term" "$filepath"
     return 0
@@ -418,9 +394,9 @@ search_past_week () {
             echo "No file found for: $entry_date"
             continue
         else
-            printf "$BOLD"
+            printf "%s" "$BOLD"
             head -n1 "$filepath"
-            printf "$NORMAL"
+            printf "%s" "$NORMAL"
             echo
             grep --color='auto' "$search_term" "$filepath"
         fi
@@ -435,14 +411,14 @@ check_key_file_exists () {
     if [[ ! -e "$KEY_FILE" ]]; then
         # indentation deliberately removed
         # to avoid breaking here switch
-        cat << _EOF_ >> "$KEY_FILE" 
+        cat << _EOF_ >> "$KEY_FILE"
 classifications:
 
 # heading
 ## sub heading
 * task
 - note
-o event 
+o event
 
 statuses:
 
@@ -475,9 +451,6 @@ get_previous_entry () {
     while [[ "$count" -le 21 ]]; do
         previous=$(date --date="${current_entry} -${count} day" "+%Y-%m-%d")
 
-        previous_year=${previous:0:4}
-        previous_month=$(date --date="$previous" '+%b')
-
         # format will be yyyy-mm-dd-jrnl.txt
         previous_filename="$previous-jrnl.txt"
 
@@ -486,7 +459,7 @@ get_previous_entry () {
         if [ -f "$previous_filepath" ]; then
             return 0
         else
-            count=$((count + 1)) 
+            count=$((count + 1))
         fi
     done
 
@@ -501,23 +474,23 @@ review_past_week () {
     # loop through past 7 days
 
     seven_days_ago=$(date -d '-7 day' '+%Y-%m-%d')
-    
+
     month=$(date --date="$seven_days_ago" '+%b')
-    
+
     if [[ ! -d "$REVIEW_FOLDER" ]]; then
         mkdir -p "$REVIEW_FOLDER"
     fi
-    
+
     review_file_name="$today-review.txt"
     review_filepath="$REVIEW_FOLDER/$review_file_name"
-    
+
     echo "Tasks completed between $seven_days_ago and $today"
 
     for (( i=0; i<7; i=i+1 )); do
         entry_date=$(date -d "-$i day" "+%Y-%m-%d")
 
         get_done_tasks "$entry_date"
-        
+
         if [[ -n "$completed_tasks" ]]; then
             head -n 1 "$filepath" >> "$review_filepath"
             printf "%s" "$completed_tasks" >> "$review_filepath"
@@ -546,13 +519,13 @@ get_done_tasks () {
     fi
 
     completed_tasks=$(grep -e "^x\s" "$filepath")
-    
+
     if [[ -n "$completed_tasks" ]]; then
         echo
-        printf "$BOLD"
+        printf "%s" "$BOLD"
         head -n 1 "$filepath"
-        printf "$NORMAL"
-        echo $completed_tasks
+        printf "%s" "$NORMAL"
+        echo "$completed_tasks"
     fi
     return
 }
@@ -560,11 +533,11 @@ get_done_tasks () {
 # get oustanding to do tasks
 show_still_todos () {
     entry_date="$today"
-    
+
     check_paths "$entry_date"
 
     if [[ "$?" -eq 1 ]]; then
-        file_does_not_exist
+        file_does_not_exist "$filename"
         return 1
     fi
 
@@ -586,8 +559,7 @@ check_paths () {
     else
         entry_date=$1
     fi
-    year=${entry_date:0:4}
-    month=$(date --date="$entry_date" '+%b')
+
     # check if a folder named journal exists
     # if not make it
     if [ ! -d "$JOURNALS_FOLDER" ]; then
@@ -600,7 +572,7 @@ check_paths () {
     filename="$entry_date-jrnl.txt"
 
     filepath="$JOURNALS_FOLDER/$filename"
-    
+
     if [[ ! -e "$filepath" ]]; then
         # if file does not exist return 1
        return 1
@@ -633,16 +605,21 @@ create_file () {
     filepath="$1"
     echo "# task journal $entry_date" > "$filepath"
     add_defaults "$entry_date"
-    return
+    return 0
 }
 
 file_does_not_exist () {
+    # filename might be unassigned
+    # when running tests
+    if [[ -z "$filename" ]]; then
+        filename="$1"
+    fi
+
     echo "Error: $filename does not exist"
 
     if [[ "$entry_date" == "$today" ]]; then
         echo "To make today file run task-journal.sh with no args"
     fi
-    return
 }
 
 
@@ -654,156 +631,177 @@ check_todo_exists () {
     return
 }
 
-# handle args
-# loop continues whilst $1 is not empty
+run_main () {
 
-# ideal usage:
-# tj file action parameters
+    tj_dir_loc="$(dirname "$0")"
 
-while [[ -n "$1" ]]; do
-    case "$1" in
-        -a | -add | --add | add)
-            action="add"
-            addition="$2"
-            ;;
-        -dr | -dayreview)
-            action="review"
-            review_type="day"
-            ;;
-        -d | --date | -date | date)
-            # usage: tj --date yyyy-mm-dd
-            # view given entry
-            entry_date="$2"
-            ;;
-        do | --do | -do)
-            action="complete"
-            item="$2"
-            #complete_task "$2"
-            ;;
-        -e | -edit | --edit | edit) 
-            action="edit"
-            edit=1
-            ;;
-        -habits | -hab | habits)
-            filepath="$HABITS_FILE"
-            check_habits_file_exists
-            ;;
-        -h | --help | -help)
-            help
-            exit
-            ;;
-        -k | -key | key)
-            filepath="$KEY_FILE"
-            check_key_file_exists
-            ;;
-        -mv | -m | --move)
-            # usage:
-            # tj -m source-file item# destfile 
-            # tj -m bl 5 today
-            # tj -m today 5 bl
-           action="move" 
-           sourcefile="$2"
-           item="$3"
-           destfile="$4"
-           ;;
-        -qr | -quickreview)
-            action="review"
-            review_type="quick"
-            ;;
-        -rem | -reminders)
-            filepath="$REMINDERS_FILE"
-            check_reminders_file_exists
-            ;;
-        -r | -review | review)
-            review_past_week
-            exit
-            ;;
-        -s | ls | -ls | search)
-            action="search"
-            search_term="$2"
-            ;;
-        -std | stilltd)
-            show_still_todos "$2"
-            exit
-            ;;
-        -td | -todo)
-            check_todo_exists
-            filepath="$TODO_FILE"
-            ;;
-        -weekreview | -wr)
-            action="review"
-            review_type="week"
-            ;; 
-        -y | yesterday)
-            entry_date="$yesterday"
-            ;;
-    esac
-    shift
-done
+    TJ_CFG_FILE="$tj_dir_loc/tj.cfg"
 
-
-if [[ -n "$filepath" ]] && [[ -z "$entry_date" ]]; then
-    # filepath assigned to global filepath
-    # do nothing
-    :
-elif [[ -n "$entry_date" ]]; then
-    check_valid_date "$entry_date"
-    if [[ "$?" -eq 1 ]]; then
-        exit
-    fi
-
-    check_paths "$entry_date"
-
-    if [[ "$?" -eq 1 ]]; then
-        file_does_not_exist
-        exit
-    fi
-else
-    entry_date="$today"
-    check_paths "$entry_date"
-
-    if [[ "$?" -eq 1 ]]; then
-        create_file "$filepath"
-        echo
-    fi
-fi
-
-# actions = add, do, edit, review, search, view
-
-if [[ "$action" == "add" ]]; then
-    add_to_file "$addition" "$heading"
-    exit
-elif [[ "$action" == "complete" ]]; then
-    complete_task "$item"
-    exit
-elif [[ "$action" == "edit" ]]; then
-    edit_file
-    exit
-elif [[ "$action" == "search" ]]; then
-    search_entry "$search_term"
-    exit
-elif [[ "$action" == "move" ]]; then
-    move_task "$sourcefile" "$item" "$destfile"
-    exit
-elif [[ "$action" == "review" ]] && [[ "$review_type" == "quick" ]]; then
-    # check if notes file exists
-    # created by quick-note.sh script
-
-    notes_filepath="$JOURNALS_FOLDER/$today-notes.txt"
-    if [[ -e "$notes_filepath" ]]; then
-        "$EDITOR" -O "$filepath" "$notes_filepath" -c "split $TODO_FILE"
+    if [[ -f "$TJ_CFG_FILE" ]]; then
+        source "$TJ_CFG_FILE"
     else
-        "$EDITOR" -O "$filepath" "$TODO_FILE"
+        echo "No config file found. Please create config file named tj.cfg"
+        exit
     fi
-    exit
-elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
-    "$EDITOR" -O "$filepath" "$TODO_FILE"
-    exit
-elif [[ "$action" == "review" ]] && [[ "$review_type" == "week" ]]; then
-    "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $PROJECTS_FILE" -c 'wincmd l' -c "split $SOMEDAY_FILE"
-    exit
-else
-    # default is view file
-    view_file
-    exit
+
+    # handle args
+    # loop continues whilst $1 is not empty
+
+    # expected usage:
+    # tj file action parameters
+
+    while [[ -n "$1" ]]; do
+        case "$1" in
+            -a | -add | --add | add)
+                action="add"
+                addition="$2"
+                ;;
+            -dr | -dayreview)
+                action="review"
+                review_type="day"
+                ;;
+            -d | --date | -date | date)
+                # usage: tj --date yyyy-mm-dd
+                # view given entry
+                entry_date="$2"
+                ;;
+            do | --do | -do)
+                action="complete"
+                item="$2"
+                #complete_task "$2"
+                ;;
+            -e | -edit | --edit | edit)
+                action="edit"
+                edit=1
+                ;;
+            -habits | -hab | habits)
+                filepath="$HABITS_FILE"
+                check_habits_file_exists
+                ;;
+            -h | --help | -help)
+                help
+                exit
+                ;;
+            -k | -key | key)
+                filepath="$KEY_FILE"
+                check_key_file_exists
+                ;;
+            -mv | -m | --move)
+                # usage:
+                # tj -m source-file item# destfile
+                # tj -m bl 5 today
+                # tj -m today 5 bl
+               action="move"
+               sourcefile="$2"
+               item="$3"
+               destfile="$4"
+               ;;
+            -qr | -quickreview)
+                action="review"
+                review_type="quick"
+                ;;
+            -rem | -reminders)
+                filepath="$REMINDERS_FILE"
+                check_reminders_file_exists
+                ;;
+            -r | -review | review)
+                review_past_week
+                exit
+                ;;
+            -s | ls | -ls | search)
+                action="search"
+                search_term="$2"
+                ;;
+            -std | stilltd)
+                show_still_todos "$2"
+                exit
+                ;;
+            -td | -todo)
+                check_todo_exists
+                filepath="$TODO_FILE"
+                ;;
+            -weekreview | -wr)
+                action="review"
+                review_type="week"
+                ;;
+            -y | yesterday)
+                entry_date="$yesterday"
+                ;;
+        esac
+        shift
+    done
+
+
+    if [[ -n "$filepath" ]] && [[ -z "$entry_date" ]]; then
+        # filepath assigned to global filepath
+        # do nothing
+        :
+    elif [[ -n "$entry_date" ]]; then
+        check_valid_date "$entry_date"
+        if [[ "$?" -eq 1 ]]; then
+            exit
+        fi
+
+        check_paths "$entry_date"
+
+        if [[ "$?" -eq 1 ]]; then
+            file_does_not_exist "$filename"
+            exit
+        fi
+    else
+        entry_date="$today"
+        check_paths "$entry_date"
+
+        if [[ "$?" -eq 1 ]]; then
+            create_file "$filepath"
+            echo
+        fi
+    fi
+
+    # actions = add, do, edit, review, search, view
+
+    if [[ "$action" == "add" ]]; then
+        add_to_file "$addition"
+        exit
+    elif [[ "$action" == "complete" ]]; then
+        complete_task "$item"
+        exit
+    elif [[ "$action" == "edit" ]]; then
+        edit_file
+        exit
+    elif [[ "$action" == "search" ]]; then
+        search_entry "$search_term"
+        exit
+    elif [[ "$action" == "move" ]]; then
+        move_task "$sourcefile" "$item" "$destfile"
+        exit
+    elif [[ "$action" == "review" ]] && [[ "$review_type" == "quick" ]]; then
+        # check if notes file exists
+        # created by quick-note.sh script
+
+        notes_filepath="$JOURNALS_FOLDER/$today-notes.txt"
+        if [[ -e "$notes_filepath" ]]; then
+            "$EDITOR" -O "$filepath" "$notes_filepath" -c "split $TODO_FILE"
+        else
+            "$EDITOR" -O "$filepath" "$TODO_FILE"
+        fi
+        exit
+    elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
+        "$EDITOR" -O "$filepath" "$TODO_FILE"
+        exit
+    elif [[ "$action" == "review" ]] && [[ "$review_type" == "week" ]]; then
+        "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $PROJECTS_FILE" -c 'wincmd l' -c "split $SOMEDAY_FILE"
+        exit
+    else
+        # default is view file
+        view_file
+        exit
+    fi
+
+}
+
+# only run main function if running script directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+then
+  run_main "$@"
 fi
