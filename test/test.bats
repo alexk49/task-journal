@@ -1,16 +1,29 @@
 #!/usr/bin/env bats
 
-# all tests written using bats test frame work
+# all tests written using bats test framework
 # only bats core has been used
 # https://github.com/bats-core/bats-core
 
 setup() {
+    source task-journal.sh  >/dev/null 2>&1 || source ../task-journal.sh >/dev/null 2>&1
+
+    source test.cfg  >/dev/null 2>&1 || source test/test.cfg >/dev/null 2>&1
     # get the containing directory of this file
     # use $BATS_TEST_FILENAME instead of ${BASH_SOURCE[0]} or $0,
     # as those will point to the bats executable's location or the preprocessed file respectively
-    source task-journal.sh  >/dev/null 2>&1 || source ../task-journal.sh >/dev/null 2>&1
+    TEST_DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
+    # make executables in dir below test dir visible to PATH
+    PATH="$TEST_DIR/../:$PATH"
 }
 
+setup_file() {
+    test_journal="test-journal"
+    # this is run at the start of all tests
+    TEST_DIR=$(dirname "$BATS_TEST_FILENAME")
+    cd "$TEST_DIR"
+    echo "# making $test_journal" >&3
+    mkdir "$test_journal"
+}
 
 @test "Check help message" {
     result=$(help)
@@ -39,6 +52,25 @@ setup() {
 @test "test file does not exist message" {
     result=$(file_does_not_exist 1800-12-25-jrnl.txt)
     [[ "$result" == "Error: 1800-12-25-jrnl.txt does not exist" ]]
+}
+
+@test "test creating new file" {
+    create_file "$today_filepath" "$today_entry_date"
+
+    [[ -e "$today_filepath" ]]
+
+    result=$(cat "$today_filepath")
+    [[ "$result" == "# task journal $today" ]]
+
+    rm "$today_filepath"
+
+}
+
+teardown_file () {
+    # this will be run at the end of all tests
+    TEST_DIR=$(dirname "$BATS_TEST_FILENAME")
+    cd "$TEST_DIR"
+    rm -r "test-journal"
 }
 
 teardown() {
