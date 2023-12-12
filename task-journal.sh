@@ -150,9 +150,9 @@ add_defaults () {
 
     get_previous_entry "$entry_date"
 
-    echo "Previous entry found: $(basename $previous_filepath)"
-
     if [[ -e "$previous_filepath" ]]; then
+
+        echo "Previous entry found: $(basename $previous_filepath)"
         # inverse grep done tasks, headings, and blank lines
         remainingtasks=$(grep -Ev "^-+|^#+|^x\s|^-\s|^$|^o\s|^~\s" "$previous_filepath")
 
@@ -465,7 +465,6 @@ get_previous_entry () {
 
     # if no file found return nothing
     echo "No previous entry found within last week"
-    return 1
 }
 
 
@@ -603,6 +602,7 @@ check_habits_file_exists () {
 create_file () {
     # used to create files after check paths run
     filepath="$1"
+    entry_date="$2"
     echo "# task journal $entry_date" > "$filepath"
     add_defaults "$entry_date"
     return 0
@@ -753,7 +753,7 @@ run_main () {
         check_paths "$entry_date"
 
         if [[ "$?" -eq 1 ]]; then
-            create_file "$filepath"
+            create_file "$filepath" "$entry_date"
             echo
         fi
     fi
