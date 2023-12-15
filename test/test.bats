@@ -66,6 +66,41 @@ setup_file() {
 
 }
 
+@test "testing check_todo_exists" {
+    # this should make test_journal/todo.txt
+    check_todo_exists
+
+    [[ -e "test-journal/todo.txt" ]]
+}
+
+@test "testing adding defaults passes over outstanding values" {
+    echo "# task journal $yesterday" >> "$JOURNALS_FOLDER/$yesterday-jrnl.txt"
+    echo "outstanding task" >> "$JOURNALS_FOLDER/$yesterday-jrnl.txt"
+
+    create_file "$today_filepath" "$today"
+
+    result=$(grep "outstanding task" "$today_filepath")
+
+    [[ "$result" == "outstanding task" ]]
+}
+
+@test "testing check_reminders_file_exists" {
+    check_reminders_file_exists
+
+    [[ -e "test-journal/reminders.txt" ]]
+}
+
+@test "testing check_for_reminders" {
+    test_rem="reminder due today due:$today"
+    echo "$test_rem" >> "$REMINDERS_FILE"
+
+    check_for_reminders "$today_filepath"
+
+    result=$(grep -E "reminder due today due:[0-9]{4}-[0-9]{2}-[0-9]{2}" "$today_filepath")
+
+    [[ "$result" == "$test_rem" ]]
+}
+
 teardown_file () {
     # this will be run at the end of all tests
     TEST_DIR=$(dirname "$BATS_TEST_FILENAME")
