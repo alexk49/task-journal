@@ -163,14 +163,17 @@ add_defaults () {
         sed -i -E "/^# task journal [0-9]{4}-[0-9]{2}-[0-9]{2}$/r/dev/stdin" "$filepath" <<<"$remainingtasks"
 
         check_reminders_file_exists
-        check_for_reminders
+        check_for_reminders "$filepath"
     fi
 }
 
 
 check_for_reminders () {
+
     # loop through reminders file
     # if due date is today, then add to newly created file
+    # filepath is file reminderes will be moved to
+    filepath="$1"
     echo "checking for reminders"
 
     linecount=0
