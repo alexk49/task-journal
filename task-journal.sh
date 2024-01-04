@@ -216,13 +216,16 @@ check_if_number () {
 
 complete_task () {
     # check args have been passed
-    if [[ "$#" != 1 ]]; then
+    if [[ "$#" != 2 ]]; then
         echo "Invalid usage. Must provide line number of task to complete"
         usage
         exit 1
     fi
-
-    check_if_number "$1"
+    
+    filepath="$1"
+    item="$2"
+    
+    check_if_number "$item"
 
     echo "Completing item number: $item from $filepath"
 
@@ -671,7 +674,6 @@ run_main () {
             do | --do | -do)
                 action="complete"
                 item="$2"
-                #complete_task "$2"
                 ;;
             -e | -edit | --edit | edit)
                 action="edit"
@@ -767,7 +769,7 @@ run_main () {
         add_to_file "$addition"
         exit
     elif [[ "$action" == "complete" ]]; then
-        complete_task "$item"
+        complete_task "$filepath" "$item"
         exit
     elif [[ "$action" == "edit" ]]; then
         edit_file
