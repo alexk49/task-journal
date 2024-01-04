@@ -74,14 +74,19 @@ setup_file() {
 }
 
 @test "testing adding defaults passes over outstanding values" {
-    echo "# task journal $yesterday" >> "$JOURNALS_FOLDER/$yesterday-jrnl.txt"
-    echo "outstanding task" >> "$JOURNALS_FOLDER/$yesterday-jrnl.txt"
+
+    yesterday_filepath="$JOURNALS_FOLDER/$yesterday-jrnl.txt"
+
+    echo "# task journal $yesterday" >> "$yesterday_filepath"
+    echo "outstanding task" >> "$yesterday_filepath"
 
     create_file "$today_filepath" "$today"
 
     result=$(grep "outstanding task" "$today_filepath")
 
     [[ "$result" == "outstanding task" ]]
+
+    rm "$yesterday_filepath"
 }
 
 @test "testing check_reminders_file_exists" {
@@ -99,6 +104,62 @@ setup_file() {
     result=$(grep -E "reminder due today due:[0-9]{4}-[0-9]{2}-[0-9]{2}" "$today_filepath")
 
     [[ "$result" == "$test_rem" ]]
+}
+
+@test "testing add to file" {
+    create_file "$today_filepath" "$today_entry_date"
+
+    test_entry="new entry"
+    add_to_file "$test_entry"
+
+    result=$(grep -E "$test_entry" "$today_filepath")
+
+    [[ "$result" == "$test_entry" ]]
+
+    rm "$today_filepath"
+}
+
+@test "testing check_if_number works with numbers" {
+    check_if_number 2
+
+    [[ "$status" -eq 0 ]]
+}
+
+@test "testing check_if_number fails with text" {
+    # see comment for check_valid_date_function with invalid date
+    run bash -c "source task-journal.sh && check_if_number should-fail"
+
+    [[ "$status" -eq 1 ]]
+}
+
+@test "testing complete_task function" {
+    create_file "$today_filepath" "$today_entry_date"
+
+    test_entry="new entry"
+    add_to_file "$test_entry"
+
+    run bash -c "source task-journal.sh && complete_task $today_filepath 2"
+    
+    completed_entry="x $test_entry"
+
+    result=$(grep -E "$completed_entry" "$today_filepath")
+
+    [[ "$result" == "$completed_entry" ]]
+
+    rm "$today_filepath"
+
+}
+
+@test "testing complete_task function on already completed task" {
+    create_file "$today_filepath" "$today_entry_date"
+
+    completed_entry="x new entry"
+    add_to_file "$completed_entry"
+    run bash -c "source task-journal.sh && complete_task $today_filepath 2"
+
+    [[ "$status" -eq 1 ]]
+
+    rm "$today_filepath"
 }
 
 teardown_file () {
