@@ -221,10 +221,10 @@ complete_task () {
         usage
         exit 1
     fi
-    
+
     filepath="$1"
     item="$2"
-    
+
     check_if_number "$item"
 
     echo "Completing item number: $item from $filepath"
@@ -677,7 +677,6 @@ run_main () {
                 ;;
             -e | -edit | --edit | edit)
                 action="edit"
-                edit=1
                 ;;
             -habits | -hab | habits)
                 filepath="$HABITS_FILE"
