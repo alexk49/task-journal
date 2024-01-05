@@ -350,7 +350,7 @@ view_file () {
             marker="${line:0:1}"
             remainder="${line:1}"
             output_line="$BOLD$MAGENTA$marker$NORMAL$remainder"
-       elif [[ "$line" =~ ^o ]]; then
+       elif [[ "$line" =~ ^o[[:space:]] ]]; then
             marker="${line:0:1}"
             remainder="${line:1}"
             output_line="$YELLOW$marker$NORMAL$remainder"
