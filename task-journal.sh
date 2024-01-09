@@ -482,9 +482,10 @@ _EOF_
 }
 
 
-# takes entry date as arg
-# and gives back last entry
 get_previous_entry () {
+
+    # takes entry date as arg
+    # and gives back last entry
     current_entry=$1
     count=1
     while [[ "$count" -le 21 ]]; do
@@ -568,8 +569,9 @@ get_done_tasks () {
     return
 }
 
-# get oustanding to do tasks
 show_still_todos () {
+
+    # get oustanding to do tasks
     entry_date="$today"
 
     check_paths "$entry_date"
@@ -583,13 +585,13 @@ show_still_todos () {
     echo
     printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
 
-    #grep --color='auto' -n -Ev "^[0-9]+:x\s.*$|^[0-9]+#+.*$|^[0-9]+:-.*$|^[0-9]+:$|^[0-9]+:o\s$|^[0-9]+:~\s$" "$filepath"
     grep -n -Ev "^x\s.*$|^#+.*$|^-.*$|^$|^o\s$|^~\s$" "$filepath"
     return
 }
 
-# function to check all paths of given date work
 check_paths () {
+
+    # check all paths of given date work
 
     # set todays today if no args passed
     if [[ "$#" != 1 ]]; then
