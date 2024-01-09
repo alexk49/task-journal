@@ -247,6 +247,29 @@ complete_task () {
     fi
 }
 
+assign_dest_file () {
+    # check destination file used in
+    # move task function is valid
+    # destfile will either be:
+    # REMINDERS_FILE TODO_FILE TODAY_FILE
+    destfile="$1"
+    default_destfile="$2"
+
+
+    if [[ "$destfile" == "reminders" ]] || [[ "$destfile" == "rem" ]]; then
+        destfile="$REMINDERS_FILE"
+    elif [[ "$destfile" == "todo" ]] || [[ "$destfile" == "td" ]]; then
+        destfile="$TODO_FILE"
+    elif [[ "$destfile" == "today" ]] || [[ "$destfile" == "$today" ]]; then
+        entry_date="$today"
+        check_paths "$entry_date"
+        destfile="$filepath"
+    else
+        destfile="$default_destfile"
+    fi
+
+}
+
 move_task () {
 
     #  move_task "$sourcefile" "$item" "$destfile"
@@ -255,17 +278,17 @@ move_task () {
         sourcefile="$TODO_FILE"
         entry_date="$today"
         check_paths "$entry_date"
-        destfile="$filepath"
-    elif [[ "$sourcefile" == "reminders" ]]; then
+        default_destfile="$filepath"
+    elif [[ "$sourcefile" == "reminders" ]] || [[ "$sourcefile" == "rem" ]]; then
         sourcefile="$REMINDERS_FILE"
         entry_date="$today"
         check_paths "$entry_date"
-        destfile="$filepath"
+        default_destfile="$filepath"
     elif [[ "$sourcefile" == "today" ]] || [[ "$sourcefile" == "$today" ]]; then
         entry_date="$today"
         check_paths "$entry_date"
         sourcefile="$filepath"
-        destfile="$TODO_FILE"
+        default_destfile="$TODO_FILE"
     else
         move_task_usage="Invalid options. Move allows you to move task from todo to today file. Or from today to todo.
 
@@ -275,12 +298,25 @@ move_task () {
     tj -mv today item#
 
     Move from todo file to today file:
-    tj -mv bl item#
+    tj -mv td item#
 
-If source is todo then destination is today file. If today file is source then todo is destination."
+If source is todo then default destination is today file. If today file is source then todo is default destination.
+
+Valid args for files are:
+
+today or yyyy-mm-dd for today file
+
+rem or reminders for reminders file
+
+td or todo for todo file
+    "
 
         echo "$move_task_usage"
         exit 1
+    fi
+
+    if [[ -n "$destfile" ]]; then
+        assign_dest_file "$destfile" "$default_destfile"
     fi
 
     check_if_number "$item"
@@ -291,12 +327,7 @@ If source is todo then destination is today file. If today file is source then t
 
     echo "Task: $task"
 
-    if [[ "$destfile" == "$TODO_FILE" ]]; then
-        echo "$task" >> "$destfile"
-    else
-        # destfile is today file
-        add_to_file "$task"
-    fi
+    echo "$task" >> "$destfile"
 
     # delete moved task from original
     sed -i "$item"d "$sourcefile"
