@@ -274,6 +274,10 @@ move_task () {
 
     #  move_task "$sourcefile" "$item" "$destfile"
 
+    sourcefile="$1"
+    item="$2"
+    destfile="$3"
+
     if [[ "$sourcefile" == "td" ]] || [[ "$sourcefile" == "todo" ]]; then
         sourcefile="$TODO_FILE"
         entry_date="$today"
@@ -315,9 +319,7 @@ td or todo for todo file
         exit 1
     fi
 
-    if [[ -n "$destfile" ]]; then
-        assign_dest_file "$destfile" "$default_destfile"
-    fi
+    assign_dest_file "$destfile" "$default_destfile"
 
     check_if_number "$item"
 

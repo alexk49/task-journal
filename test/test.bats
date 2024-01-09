@@ -139,7 +139,7 @@ setup_file() {
     add_to_file "$test_entry"
 
     run bash -c "source task-journal.sh && complete_task $today_filepath 2"
-    
+
     completed_entry="x $test_entry"
 
     result=$(grep -E "$completed_entry" "$today_filepath")
@@ -161,6 +161,25 @@ setup_file() {
 
     rm "$today_filepath"
 }
+
+@test "testing moving task from today file to todo file" {
+    create_file "$today_filepath" "$today_entry_date"
+
+    test_task="test task"
+
+    echo "$test_task" >> "$today_filepath"
+
+    run bash -c "source task-journal.sh && move_task today 2 td"
+
+    result=$(grep -E "$test_task" "$TODO_FILE")
+
+    [[ "$result" == "$test_task" ]]
+
+    rm "$today_filepath"
+
+    rm "$TODO_FILE"
+}
+
 
 teardown_file () {
     # this will be run at the end of all tests
