@@ -484,70 +484,7 @@ get_previous_entry () {
     echo "No previous entry found within last week"
 }
 
-
-review_past_week () {
-    # create review file of done tasks from past week
-    # loop through past 7 days
-
-    seven_days_ago=$(date -d '-7 day' '+%Y-%m-%d')
-
-    month=$(date --date="$seven_days_ago" '+%b')
-
-    if [[ ! -d "$REVIEW_FOLDER" ]]; then
-        mkdir -p "$REVIEW_FOLDER"
-    fi
-
-    review_file_name="$today-review.txt"
-    review_filepath="$REVIEW_FOLDER/$review_file_name"
-
-    echo "Tasks completed between $seven_days_ago and $today"
-
-    for (( i=0; i<7; i=i+1 )); do
-        entry_date=$(date -d "-$i day" "+%Y-%m-%d")
-
-        get_done_tasks "$entry_date"
-
-        if [[ -n "$completed_tasks" ]]; then
-            head -n 1 "$filepath" >> "$review_filepath"
-            printf "%s" "$completed_tasks" >> "$review_filepath"
-            printf "\n\n" >> "$review_filepath"
-        fi
-    done
-
-    echo
-    echo "Review written to: $review_filepath"
-    return 0
-
-}
-
-
-get_done_tasks () {
-    if [[ "$#" != 1 ]]; then
-        entry_date="$today"
-    else
-        entry_date="$1"
-    fi
-
-    check_paths "$entry_date"
-
-    if [[ "$?" -eq 1 ]]; then
-        return 1
-    fi
-
-    completed_tasks=$(grep -e "^x\s" "$filepath")
-
-    if [[ -n "$completed_tasks" ]]; then
-        echo
-        printf "%s" "$BOLD"
-        head -n 1 "$filepath"
-        printf "%s" "$NORMAL"
-        echo "$completed_tasks"
-    fi
-    return
-}
-
 show_still_todos () {
-
     # get oustanding to do tasks
     entry_date="$today"
 
@@ -558,12 +495,9 @@ show_still_todos () {
         return 1
     fi
 
-    head -n1 "$filepath"
-    echo
-    printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
+    printf "%s%soutstanding tasks:%s\n" "$BOLD" "$RED" "$NORMAL"
 
     grep -n -Ev "^x\s.*$|^#+.*$|^-.*$|^$|^o\s$|^~\s$" "$filepath"
-
 }
 
 check_paths () {
@@ -720,15 +654,11 @@ run_main () {
                 filepath="$REMINDERS_FILE"
                 check_reminders_file_exists
                 ;;
-            -r | -review | review)
-                review_past_week
-                exit
-                ;;
             -s | ls | -ls | search)
                 action="search"
                 search_term="$2"
                 ;;
-            -std | stilltd)
+            -o | -std | stilltd)
                 show_still_todos "$2"
                 exit
                 ;;
