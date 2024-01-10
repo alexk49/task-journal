@@ -181,6 +181,24 @@ setup_file() {
 }
 
 
+@test "testing get_previous_entry gets previous entry" {
+    create_file "$today_filepath" "$today_entry_date"
+
+    previous_entry=$(date -d '-4 day' '+%Y-%m-%d')
+
+    previous_filename="$previous_entry-jrnl.txt"
+    test_previous_filepath="$JOURNALS_FOLDER/$previous_filename"
+
+    create_file "$test_previous_filepath" "$previous_entry"
+
+    get_previous_entry "$today"
+
+    [[ "$previous_filepath" == "$test_previous_filepath" ]]
+
+    rm "$test_previous_filepath"
+    rm "$today_filepath"
+}
+
 teardown_file () {
     # this will be run at the end of all tests
     TEST_DIR=$(dirname "$BATS_TEST_FILENAME")
