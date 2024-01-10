@@ -343,6 +343,7 @@ edit_file () {
 
 view_file () {
     # loop throuh file to allow colour highlighting
+    filepath="$1"
     # set internal field seperator to blank
     # this avoids stripping of whitespace at beginning or end of lines
     # colorized text taken from https://stackoverflow.com/questions/5412761/using-colors-with-printf/5413029#5413029
@@ -417,30 +418,6 @@ search_entry () {
     printf "%s" "$NORMAL"
     echo
     grep --color='auto' "$search_term" "$filepath"
-    return 0
-}
-
-
-search_past_week () {
-    search_term="$1"
-    # loop through past 7 days
-    for (( i=0; i<7; i=i+1 )); do
-        entry_date=$(date -d "-$i day" "+%Y-%m-%d")
-
-        check_paths "$entry_date"
-
-        if [[ "$?" -eq 1 ]]; then
-            echo "No file found for: $entry_date"
-            continue
-        else
-            printf "%s" "$BOLD"
-            head -n1 "$filepath"
-            printf "%s" "$NORMAL"
-            echo
-            grep --color='auto' "$search_term" "$filepath"
-        fi
-    done
-
     return 0
 }
 
@@ -586,7 +563,7 @@ show_still_todos () {
     printf "%s%stodo:%s\n" "$BOLD" "$RED" "$NORMAL"
 
     grep -n -Ev "^x\s.*$|^#+.*$|^-.*$|^$|^o\s$|^~\s$" "$filepath"
-    return
+
 }
 
 check_paths () {
@@ -833,7 +810,7 @@ run_main () {
         exit
     else
         # default is view file
-        view_file
+        view_file "$filepath"
         exit
     fi
 
