@@ -101,7 +101,8 @@ tj -dayreview
 tj -wr
 tj -weekreview
 
-# show any uncompleted task items in today file
+# show any outstanding task items in today file
+tj -o
 tj -std
 tj stilltd
 
@@ -484,6 +485,7 @@ get_previous_entry () {
     echo "No previous entry found within last week"
 }
 
+
 show_still_todos () {
     # get oustanding to do tasks
     entry_date="$today"
@@ -499,6 +501,7 @@ show_still_todos () {
 
     grep -n -Ev "^x\s.*$|^#+.*$|^-.*$|^$|^o\s$|^~\s$" "$filepath"
 }
+
 
 check_paths () {
 
