@@ -106,11 +106,6 @@ tj -o
 tj -std
 tj stilltd
 
-# view all tasks completed within past week
-# this will output to terminal as well as creating a file in the reviews folder
-tj -r
-tj -review
-
 _EOF_
 }
 
