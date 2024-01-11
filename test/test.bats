@@ -169,6 +169,7 @@ setup_file() {
 
     echo "$test_task" >> "$today_filepath"
 
+    # expected failure so run in different shell
     run bash -c "source task-journal.sh && move_task today 2 td"
 
     result=$(grep -E "$test_task" "$TODO_FILE")
@@ -197,6 +198,19 @@ setup_file() {
 
     rm "$test_previous_filepath"
     rm "$today_filepath"
+}
+
+@test "testing check_paths fails when path does not exist" {
+    entry_date="2022-08-01"
+    run bash -c "source task-journal.sh && check_paths $entry_date"
+
+    [[ "$status" -eq 1 ]]
+}
+
+@test "testing check_paths succeeds when path does exist" {
+    create_file "$today_filepath" "$today_entry_date"
+    check_paths "$today_entry_date"
+    [[ "$status" -eq 0 ]]
 }
 
 teardown_file () {
