@@ -48,10 +48,6 @@ Alternate files can be defined via:
 # alternate date entry:
 tj -d yyyy-mm-dd
 
-# habits file
-tj -hab
-tj -habits
-
 # key file
 tj -k
 tj -key
@@ -538,17 +534,6 @@ check_reminders_file_exists() {
 }
 
 
-check_habits_file_exists () {
-    # if habits file doesn't exist
-    # create empty habits file
-    if [[ ! -e "$HABITS_FILE" ]]; then
-        echo "Creating new habits file"
-        touch "$HABITS_FILE"
-        echo -e "## habits\n" > "$HABITS_FILE"
-    fi
-}
-
-
 create_file () {
     # used to create files after check paths run
     filepath="$1"
@@ -621,10 +606,6 @@ run_main () {
                 ;;
             -e | -edit | --edit | edit)
                 action="edit"
-                ;;
-            -habits | -hab | habits)
-                filepath="$HABITS_FILE"
-                check_habits_file_exists
                 ;;
             -h | --help | -help)
                 help
