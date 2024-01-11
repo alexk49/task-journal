@@ -16,6 +16,7 @@ setup() {
     PATH="$TEST_DIR/../:$PATH"
 }
 
+
 setup_file() {
     test_journal="test-journal"
     # this is run at the start of all tests
@@ -25,17 +26,20 @@ setup_file() {
     mkdir "$test_journal"
 }
 
-@test "Check help message" {
+
+@test "testing help message" {
     result=$(help)
     [[ "$result" == *"Task Journal example usage"* ]]
 }
 
-@test "check valid date function with valid date" {
+
+@test "testing check_valid_date function with valid date" {
     result=$(check_valid_date 2023-08-22)
     [[ "$result" -eq 0 ]]
 }
 
-@test "check valid date function with invalid date" {
+
+@test "testing check_valid_date function with invalid date" {
     # as per https://stackoverflow.com/questions/68853013/bats-assert-failure-test-not-recognising-exit-1
     # expected failure not work when running a function
     # have to run through a different shell to make sure error message
@@ -44,17 +48,29 @@ setup_file() {
     [[ "$status" -eq 1 ]]
 }
 
-@test "check if arg is number with valid number" {
-    result=$(check_if_number 2)
-    [[ "$result" -eq 0 ]]
+
+@test "testing check_if_number works with numbers" {
+    check_if_number 2
+
+    [[ "$status" -eq 0 ]]
 }
 
-@test "test file does not exist message" {
+
+@test "testing check_if_number fails with text" {
+    # see comment for check_valid_date_function with invalid date
+    run bash -c "source task-journal.sh && check_if_number should-fail"
+
+    [[ "$status" -eq 1 ]]
+}
+
+
+@test "testing file_does_not_exist message" {
     result=$(file_does_not_exist 1800-12-25-jrnl.txt)
     [[ "$result" == "Error: 1800-12-25-jrnl.txt does not exist" ]]
 }
 
-@test "test creating new file" {
+
+@test "testing creating new file" {
     create_file "$today_filepath" "$today_entry_date"
 
     [[ -e "$today_filepath" ]]
@@ -66,12 +82,14 @@ setup_file() {
 
 }
 
+
 @test "testing check_todo_exists" {
     # this should make test_journal/todo.txt
     check_todo_exists
 
     [[ -e "test-journal/todo.txt" ]]
 }
+
 
 @test "testing adding defaults passes over outstanding values" {
 
@@ -89,11 +107,13 @@ setup_file() {
     rm "$yesterday_filepath"
 }
 
+
 @test "testing check_reminders_file_exists" {
     check_reminders_file_exists
 
     [[ -e "test-journal/reminders.txt" ]]
 }
+
 
 @test "testing check_for_reminders" {
     test_rem="reminder due today due:$today"
@@ -106,7 +126,8 @@ setup_file() {
     [[ "$result" == "$test_rem" ]]
 }
 
-@test "testing add to file" {
+
+@test "testing add_to_file function" {
     create_file "$today_filepath" "$today_entry_date"
 
     test_entry="new entry"
@@ -119,18 +140,6 @@ setup_file() {
     rm "$today_filepath"
 }
 
-@test "testing check_if_number works with numbers" {
-    check_if_number 2
-
-    [[ "$status" -eq 0 ]]
-}
-
-@test "testing check_if_number fails with text" {
-    # see comment for check_valid_date_function with invalid date
-    run bash -c "source task-journal.sh && check_if_number should-fail"
-
-    [[ "$status" -eq 1 ]]
-}
 
 @test "testing complete_task function" {
     create_file "$today_filepath" "$today_entry_date"
@@ -150,6 +159,7 @@ setup_file() {
 
 }
 
+
 @test "testing complete_task function on already completed task" {
     create_file "$today_filepath" "$today_entry_date"
 
@@ -162,10 +172,11 @@ setup_file() {
     rm "$today_filepath"
 }
 
+
 @test "testing moving task from today file to todo file" {
     create_file "$today_filepath" "$today_entry_date"
 
-    test_task="test task"
+    test_task="testingtask"
 
     echo "$test_task" >> "$today_filepath"
 
@@ -200,6 +211,7 @@ setup_file() {
     rm "$today_filepath"
 }
 
+
 @test "testing check_paths fails when path does not exist" {
     entry_date="2022-08-01"
     run bash -c "source task-journal.sh && check_paths $entry_date"
@@ -207,11 +219,13 @@ setup_file() {
     [[ "$status" -eq 1 ]]
 }
 
+
 @test "testing check_paths succeeds when path does exist" {
     create_file "$today_filepath" "$today_entry_date"
     check_paths "$today_entry_date"
     [[ "$status" -eq 0 ]]
 }
+
 
 teardown_file () {
     # this will be run at the end of all tests
@@ -219,6 +233,7 @@ teardown_file () {
     cd "$TEST_DIR"
     rm -r "test-journal"
 }
+
 
 teardown() {
     # this will be run at the end of each test
