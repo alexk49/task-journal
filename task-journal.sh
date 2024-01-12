@@ -103,6 +103,10 @@ tj -o
 tj -std
 tj stilltd
 
+# view finished tasks for past 7 days
+tj -f 7
+tj -finished 7
+
 _EOF_
 }
 
@@ -565,6 +569,21 @@ check_todo_exists () {
     return
 }
 
+
+view_finished_tasks () {
+    num_days="$1"
+
+    if [[ -z "$num_days" ]]; then
+        num_days=1
+    fi
+
+    check_if_number "$num_days"
+
+    find "$JOURNALS_FOLDER" -type f -iname "*-jrnl.txt" -mtime -$num_days -print0 | xargs -0 grep --color=auto -E "^x\s"
+
+}
+
+
 run_main () {
 
     tj_dir_loc="$(dirname "$0")"
@@ -601,6 +620,12 @@ run_main () {
                 ;;
             -e | -edit | --edit | edit)
                 action="edit"
+                ;;
+            -f | -finished | --finished)
+                action="finished"
+                num_days="$2"
+                view_finished_tasks "$num_days"
+                exit
                 ;;
             -h | --help | -help)
                 help
