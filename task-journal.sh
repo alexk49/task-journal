@@ -31,6 +31,8 @@ cat << _EOF_
 Task Journal example usage
 --------------------------
 
+task-journal.sh [file] [action] [parameters]
+
 It is recommended to create an alias for ./task-journal.sh to tj
 alias tj="path-to-task-journal.sh"
 
@@ -73,21 +75,28 @@ tj -e
 tj -mv source-file ITEM# [OPT destfile]
 tj -mv source-file ITEM# [OPT destfile]
 
-Move allows you to move task from todo to today file. Or from today to todo.
+If no destination file is given then defaults are only set for the todo file and the today file.
 
-Move from today file to todo file:
+If source is todo then destination is today file. If today file is source then todo is destination.
+
+# Move from today file to todo file:
 tj -mv today item#
 
-Move from todo file to today file:
+# Move from todo file to today file:
 tj -mv -td item#
 
-If source is todo then destination is today file. If today file is source then todo is destination."
+# open all tj files in editor:
+tj -r
+tj -rev
+tj -review
 
 # search file
+tj -s "search term"
 tj ls "search term"
 tj search "search term"
 
-The following are one off actions:
+# search reminder file
+tj -rem -s "search term"
 
 # show any outstanding task items in today file
 tj -o
@@ -397,11 +406,8 @@ view_file () {
 search_entry () {
     # usage: search-term entry-date
     search_term="$1"
+    filepath="$2"
 
-    printf "%s" "$BOLD"
-    head -n1 "$filepath"
-    printf "%s" "$NORMAL"
-    echo
     grep --color='auto' "$search_term" "$filepath"
     return 0
 }
@@ -420,15 +426,15 @@ classifications:
 * task
 - note
 o event
+another task
 
 statuses:
 
-(A) * prioritied task with priority levels
-! * prioritised task
-> * task to be moved to futurelog/todo
-x * done task
-~ * no longer needed task
-* task with tags +project @context
+(A) prioritied task with priority levels
+! prioritised task
+x done task
+~ no longer needed task
+task with tags +project @context
 / on hold task
 
 todo specific:
@@ -471,7 +477,7 @@ get_previous_entry () {
 
 
 show_still_todos () {
-    # get oustanding to do tasks
+    # get oustanding tasks
     entry_date="$today"
 
     check_paths "$entry_date"
@@ -618,11 +624,14 @@ run_main () {
                 filepath="$REMINDERS_FILE"
                 check_reminders_file_exists
                 ;;
-            -s | ls | -ls | search)
+            -r | -rev | -review)
+                action="review"
+                ;;
+            -s | ls | -ls | -search)
                 action="search"
                 search_term="$2"
                 ;;
-            -o | -std | stilltd)
+            -o | -std | -stilltd)
                 show_still_todos "$2"
                 exit
                 ;;
@@ -630,7 +639,7 @@ run_main () {
                 check_todo_exists
                 filepath="$TODO_FILE"
                 ;;
-            -y | yesterday)
+            -y | yesterday | -yesterday)
                 entry_date="$yesterday"
                 ;;
         esac
@@ -676,10 +685,13 @@ run_main () {
         edit_file "$filepath"
         exit
     elif [[ "$action" == "search" ]]; then
-        search_entry "$search_term"
+        search_entry "$search_term" "$filepath"
         exit
     elif [[ "$action" == "move" ]]; then
         move_task "$sourcefile" "$item" "$destfile"
+        exit
+    elif [[ "$action" == "review" ]]; then
+        "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $REMINDERS_FILE" -c 'wincmd l' -c "split $KEY_FILE"
         exit
     else
         # default is view file
