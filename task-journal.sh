@@ -89,14 +89,6 @@ tj search "search term"
 
 The following are one off actions:
 
-# open today entry alongside todo list
-tj -dr
-tj -dayreview
-
-# open today entry, todo.txt, projects file, and someday file in editor
-tj -wr
-tj -weekreview
-
 # show any outstanding task items in today file
 tj -o
 tj -std
@@ -328,6 +320,7 @@ td or todo for todo file
 }
 
 edit_file () {
+    filepath="$1"
     "$EDITOR" "$filepath"
     return 0
 }
@@ -591,10 +584,6 @@ run_main () {
                 action="add"
                 addition="$2"
                 ;;
-            -dr | -dayreview)
-                action="review"
-                review_type="day"
-                ;;
             -d | --date | -date | date)
                 # usage: tj --date yyyy-mm-dd
                 # view given entry
@@ -625,10 +614,6 @@ run_main () {
                item="$3"
                destfile="$4"
                ;;
-            -qr | -quickreview)
-                action="review"
-                review_type="quick"
-                ;;
             -rem | -reminders)
                 filepath="$REMINDERS_FILE"
                 check_reminders_file_exists
@@ -644,10 +629,6 @@ run_main () {
             -td | -todo)
                 check_todo_exists
                 filepath="$TODO_FILE"
-                ;;
-            -weekreview | -wr)
-                action="review"
-                review_type="week"
                 ;;
             -y | yesterday)
                 entry_date="$yesterday"
@@ -683,7 +664,7 @@ run_main () {
         fi
     fi
 
-    # actions = add, do, edit, review, search, view
+    # actions = add, do, edit, search, view
 
     if [[ "$action" == "add" ]]; then
         add_to_file "$addition"
@@ -692,30 +673,13 @@ run_main () {
         complete_task "$filepath" "$item"
         exit
     elif [[ "$action" == "edit" ]]; then
-        edit_file
+        edit_file "$filepath"
         exit
     elif [[ "$action" == "search" ]]; then
         search_entry "$search_term"
         exit
     elif [[ "$action" == "move" ]]; then
         move_task "$sourcefile" "$item" "$destfile"
-        exit
-    elif [[ "$action" == "review" ]] && [[ "$review_type" == "quick" ]]; then
-        # check if notes file exists
-        # created by quick-note.sh script
-
-        notes_filepath="$JOURNALS_FOLDER/$today-notes.txt"
-        if [[ -e "$notes_filepath" ]]; then
-            "$EDITOR" -O "$filepath" "$notes_filepath" -c "split $TODO_FILE"
-        else
-            "$EDITOR" -O "$filepath" "$TODO_FILE"
-        fi
-        exit
-    elif [[ "$action" == "review" ]] && [[ "$review_type" == "day" ]]; then
-        "$EDITOR" -O "$filepath" "$TODO_FILE"
-        exit
-    elif [[ "$action" == "review" ]] && [[ "$review_type" == "week" ]]; then
-        "$EDITOR" -O "$filepath" "$TODO_FILE" -c "split $PROJECTS_FILE" -c 'wincmd l' -c "split $SOMEDAY_FILE"
         exit
     else
         # default is view file
