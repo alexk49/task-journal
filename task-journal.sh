@@ -579,7 +579,10 @@ view_finished_tasks () {
 
     check_if_number "$num_days"
 
-    find "$JOURNALS_FOLDER" -type f -iname "*-jrnl.txt" -mtime -$num_days -print0 | xargs -0 grep --color=auto -E "^x\s"
+    # change dir to JOURNALS_FOLDER first
+    # so that grep output only includes base file names
+    cd "$JOURNALS_FOLDER"
+    find . -type f -iname "*-jrnl.txt" -mtime -$num_days -print0 | xargs -0 grep --color=auto -E "^x\s"
 
 }
 
