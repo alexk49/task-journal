@@ -227,6 +227,23 @@ setup_file() {
 }
 
 
+@test "testing view_finished_tasks outputs as expected" {
+    yesterday_filepath="$JOURNALS_FOLDER/$yesterday-jrnl.txt"
+
+    create_file "$today_filepath" "$today_entry_date"
+
+    create_file "$yesterday_filepath" "$yesterday"
+
+    complete_task="x completed task"
+
+    echo "$complete_task" >> "$today_filepath"
+    echo "$complete_task" >> "$yesterday_filepath"
+
+    result=$(view_finished_tasks 3)
+
+    [[ "$result" == *"$complete_task"* ]]
+}
+
 teardown_file () {
     # this will be run at the end of all tests
     TEST_DIR=$(dirname "$BATS_TEST_FILENAME")
